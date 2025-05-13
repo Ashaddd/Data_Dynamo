@@ -4,7 +4,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SITE_DESCRIPTION, SITE_NAME } from "@/lib/constants";
-import { Award, CalendarCheck, Handshake, Lightbulb, Users, GraduationCap, Cpu, Zap, Building, LogIn, UserPlus } from "lucide-react";
+import { Award, CalendarCheck, Handshake, Lightbulb, Users, GraduationCap, Cpu, Zap, SlidersHorizontal, Cog, Briefcase as BriefcaseIcon, LogIn, UserPlus } from "lucide-react"; // Renamed Briefcase to BriefcaseIcon to avoid conflict
 import Link from "next/link";
 import { useAuth } from "@/hooks/use-auth";
 
@@ -50,10 +50,22 @@ const departmentShowcase = [
     href: "/dashboard/notable-alumni", 
   },
   {
-    icon: <Building size={48} className="text-primary mb-2" />,
+    icon: <SlidersHorizontal size={48} className="text-primary mb-2" />,
     title: "Civil Engineering",
     description: "Builders of infrastructure, shaping our environment and modern society.",
     href: "/dashboard/notable-alumni", 
+  },
+  {
+    icon: <Cog size={48} className="text-primary mb-2" />,
+    title: "Mechanical Engineering",
+    description: "Designers and creators of machines, systems, and mechanical solutions.",
+    href: "/dashboard/notable-alumni", 
+  },
+  {
+    icon: <BriefcaseIcon size={48} className="text-primary mb-2" />,
+    title: "Business Administration",
+    description: "Leaders and strategists in commerce, management, and organizational success.",
+    href: "/dashboard/notable-alumni", // Or a specific page for business alumni
   },
 ];
 
@@ -86,7 +98,7 @@ export default function PublicHomePageContent() {
           <h2 className="text-3xl font-bold tracking-tight text-center sm:text-4xl text-foreground mb-10">
             Explore Our Alumni Network
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6"> {/* Adjusted grid for more items */}
             {departmentShowcase.map((dept) => (
               <Link href={dept.href} key={dept.title} legacyBehavior>
                 <a className="block h-full">
