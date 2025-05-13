@@ -1,9 +1,11 @@
 import NotableAlumniList from '@/components/alumni/NotableAlumniList';
-import { mockAlumni } from '@/data/alumni';
 import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import type { Metadata } from 'next';
 import { MAJORS_DEPARTMENTS } from '@/lib/constants';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { db } from '@/lib/firebase';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+import type { Alumni } from '@/lib/types';
 
 export const metadata: Metadata = {
   title: 'Notable Alumni',
@@ -12,20 +14,42 @@ export const metadata: Metadata = {
 
 const TARGET_DEPARTMENT_VALUES = ['computer_science', 'electrical_engineering', 'civil_engineering'];
 
-export default function NotableAlumniPage() {
-  const allAlumni = mockAlumni;
+async function getNotableAlumniByDepartments(departmentValues: string[]): Promise<Alumni[]> {
+  if (!departmentValues || departmentValues.length === 0) {
+    return [];
+  }
+  try {
+    const usersCollection = collection(db, 'users');
+    const q = query(
+      usersCollection,
+      where('userType', '==', 'alumni'),
+      where('isNotable', '==', true),
+      where('major', 'in', departmentValues)
+    );
+    const querySnapshot = await getDocs(q);
+    const alumni = querySnapshot.docs.map(doc => {
+      const data = doc.data();
+      // Ensure graduationYear is a number if it exists
+      const graduationYear = data.graduationYear ? Number(data.graduationYear) : undefined;
+      return {
+        id: doc.id,
+        ...data,
+        graduationYear, // Override with potentially converted number
+      } as Alumni;
+    });
+    return alumni;
+  } catch (error) {
+    console.error("Error fetching notable alumni:", error);
+    return []; // Return empty array on error
+  }
+}
 
+export default async function NotableAlumniPage() {
   const targetDepartments = MAJORS_DEPARTMENTS.filter(dept =>
     TARGET_DEPARTMENT_VALUES.includes(dept.value)
   );
 
-  // Check if any notable alumni exist across the TARGET departments for the main message
-  const notableAlumniInTargetDepartments = allAlumni.filter(alum =>
-    alum.isNotable && targetDepartments.some(dept => dept.value === alum.major)
-  );
-
   if (targetDepartments.length === 0) {
-    // This case should ideally not happen if constants are set up correctly
     return (
         <div className="space-y-8">
             <Card className="shadow-md">
@@ -43,6 +67,8 @@ export default function NotableAlumniPage() {
     );
   }
 
+  const allNotableAlumniInTargetDepts = await getNotableAlumniByDepartments(TARGET_DEPARTMENT_VALUES);
+
   return (
     <div className="space-y-8">
       <Card className="shadow-md">
@@ -54,7 +80,7 @@ export default function NotableAlumniPage() {
         </CardHeader>
       </Card>
 
-      {notableAlumniInTargetDepartments.length > 0 ? (
+      {allNotableAlumniInTargetDepts.length > 0 ? (
         <Tabs defaultValue={targetDepartments[0].value} className="w-full">
           <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 mb-6">
             {targetDepartments.map((department) => (
@@ -65,8 +91,8 @@ export default function NotableAlumniPage() {
           </TabsList>
 
           {targetDepartments.map((department) => {
-            const notableAlumniInDept = allAlumni.filter(
-              (alum) => alum.isNotable && alum.major === department.value
+            const notableAlumniInDept = allNotableAlumniInTargetDepts.filter(
+              (alum) => alum.major === department.value
             );
 
             return (
@@ -84,7 +110,7 @@ export default function NotableAlumniPage() {
         </Tabs>
       ) : (
         <p className="text-center text-muted-foreground py-10 text-lg">
-          No notable alumni to display in Computer Science, Electrical Engineering, or Civil Engineering at this time.
+          No notable alumni to display in Computer Science, Electrical Engineering, or Civil Engineering at this time. Check back later as our network grows!
         </p>
       )}
     </div>
