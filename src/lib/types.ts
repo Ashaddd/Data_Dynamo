@@ -81,3 +81,18 @@ export interface MentorSearchFilters {
   industry?: string[];
   skills?: string[];
 }
+
+export interface AppNotification {
+  id: string;
+  type: 'event' | 'message' | 'system';
+  title: string;
+  message: string;
+  timestamp: string; // ISO date string
+  read: boolean;
+  link?: string; // Optional link to navigate to
+  sender?: { // Optional sender information
+    id: string;
+    name: string;
+    avatarUrl?: string;
+  };
+}

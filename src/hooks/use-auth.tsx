@@ -12,14 +12,15 @@ export interface MockUser {
   graduationYear?: string; 
   expectedGraduationYear?: string; 
   major?: string;
+  profilePictureUrl?: string; // Added for avatar in header
 }
 
 interface AuthContextType {
   user: MockUser | null;
   loading: boolean;
-  login: (id: string, email: string, name: string, userType: 'student' | 'alumni', year: string, major?: string) => void;
+  login: (id: string, email: string, name: string, userType: 'student' | 'alumni', year: string, major?: string, profilePictureUrl?: string) => void;
   logout: () => void;
-  register: (id: string, name: string, email: string, userType: 'student' | 'alumni', year: string, major: string) => void; // id added
+  register: (id: string, name: string, email: string, userType: 'student' | 'alumni', year: string, major: string, profilePictureUrl?: string) => void; // id added
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -42,13 +43,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(false);
   }, []);
 
-  const login = (id: string, email: string, name: string, userType: 'student' | 'alumni', year: string, major?: string) => {
+  const login = (id: string, email: string, name: string, userType: 'student' | 'alumni', year: string, major?: string, profilePictureUrl?: string) => {
     const mockUser: MockUser = { 
       id: id || Date.now().toString(), // Use provided ID or generate if empty (for initial mock login)
       name, 
       email, 
       userType,
       major,
+      profilePictureUrl: profilePictureUrl || `https://api.dicebear.com/8.x/initials/svg?seed=${encodeURIComponent(name)}`,
     };
     if (userType === 'alumni') {
       mockUser.graduationYear = year;
@@ -75,10 +77,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const register = (id: string, name: string, email: string, userType: 'student' | 'alumni', year: string, major: string) => {
-    console.log('Mock register in useAuth context:', { id, name, email, userType, year, major });
+  const register = (id: string, name: string, email: string, userType: 'student' | 'alumni', year: string, major: string, profilePictureUrl?: string) => {
+    console.log('Mock register in useAuth context:', { id, name, email, userType, year, major, profilePictureUrl });
     // After server action `handleRegistration` stores in DB, this updates client-side context
-    login(id, email, name, userType, year, major); 
+    login(id, email, name, userType, year, major, profilePictureUrl); 
   };
 
   return (
