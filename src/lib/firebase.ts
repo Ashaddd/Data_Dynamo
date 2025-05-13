@@ -1,4 +1,5 @@
 
+
 import { initializeApp, getApps, getApp, FirebaseApp } from 'firebase/app';
 import { getFirestore, Firestore } from 'firebase/firestore';
 import { getAuth, Auth } from 'firebase/auth';
@@ -14,34 +15,36 @@ const firebaseConfig = {
 
 // Validate critical Firebase configuration, especially projectId
 const currentProjectId = firebaseConfig.projectId;
-const isProjectIdInvalid = 
-  !currentProjectId || 
+
+// More specific check for common placeholders for project ID
+const isPlaceholderProjectId = 
+  !currentProjectId ||
   typeof currentProjectId !== 'string' ||
   currentProjectId.trim() === '' ||
-  currentProjectId === 'your_project_id' || // Exact placeholder
-  currentProjectId.toLowerCase().includes('your_project_id') || // Common variations
-  currentProjectId.toLowerCase().includes('your-project-id') || // Another common variation
-  currentProjectId.toLowerCase().startsWith('demo-') || // Firebase demo project prefix
-  currentProjectId.includes('<') || currentProjectId.includes('>'); // Often in placeholder text
+  currentProjectId.toLowerCase() === 'your_project_id' ||
+  currentProjectId.toLowerCase() === 'your-project-id' ||
+  currentProjectId.includes('<') || 
+  currentProjectId.includes('>');
 
-if (isProjectIdInvalid) {
+if (isPlaceholderProjectId) {
   // This error will be thrown when firebase.ts is first imported,
   // likely during server startup or when a component using it is rendered.
   // This makes the configuration error explicit and halts execution,
   // preventing misleading runtime errors from Firestore due to bad config.
   throw new Error(
-    `CRITICAL FIREBASE CONFIGURATION ERROR: Firebase project ID is invalid or a placeholder: "${currentProjectId}". ` +
+    `CRITICAL FIREBASE CONFIGURATION ERROR: Firebase project ID appears to be a placeholder: "${currentProjectId}". ` +
     "Please set NEXT_PUBLIC_FIREBASE_PROJECT_ID in your .env file with your ACTUAL Firebase project ID. " +
     "Firebase cannot be initialized without a valid project ID."
   );
 }
 
 // Check for other essential config keys for a typical setup
-if (!firebaseConfig.apiKey || !firebaseConfig.appId) {
+if (!firebaseConfig.apiKey || !firebaseConfig.authDomain || !firebaseConfig.appId) {
     console.warn(
-        "Firebase configuration warning: API Key or App ID might be missing. " +
-        "While projectId is set, other services might be affected. " +
-        "Please verify all NEXT_PUBLIC_FIREBASE_ variables in your .env file."
+        "Firebase configuration warning: API Key, Auth Domain, or App ID might be missing or are placeholders. " +
+        `Current Project ID: "${currentProjectId}". ` +
+        "While some services might work if projectId is correct, others (like Auth) will likely fail. " +
+        "Please verify all NEXT_PUBLIC_FIREBASE_ variables in your .env file are correctly set with your actual Firebase project details."
     );
 }
 
