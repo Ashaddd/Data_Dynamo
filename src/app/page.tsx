@@ -38,19 +38,19 @@ const departmentShowcase = [
     icon: <Cpu size={48} className="text-primary mb-2" />,
     title: "Computer Science",
     description: "Innovators, developers, and leaders in the world of computing and technology.",
-    href: "/dashboard/notable-alumni", // Users can select CS tab on the page
+    href: "/dashboard/notable-alumni", 
   },
   {
     icon: <Zap size={48} className="text-primary mb-2" />,
     title: "Electrical Engineering",
     description: "Pioneers in electronics, power systems, and telecommunications.",
-    href: "/dashboard/notable-alumni", // Users can select EE tab
+    href: "/dashboard/notable-alumni", 
   },
   {
     icon: <Building size={48} className="text-primary mb-2" />,
     title: "Civil Engineering",
     description: "Builders of infrastructure, shaping our environment and modern society.",
-    href: "/dashboard/notable-alumni", // Users can select Civil Eng tab
+    href: "/dashboard/notable-alumni", 
   },
 ];
 
@@ -68,13 +68,38 @@ export default function HomePage() {
             <p className="max-w-2xl text-lg text-muted-foreground md:text-xl">
               {SITE_DESCRIPTION} For students and alumni to reconnect, share, and grow with your alma mater.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4">
-              <Button size="lg" asChild>
-                <Link href="/register">Join the Network</Link>
-              </Button>
-              <Button size="lg" variant="outline" asChild>
-                <Link href="/login">Member Login</Link>
-              </Button>
+            
+            {/* New Student/Alumni Sections replacing old buttons */}
+            <div className="mt-10 grid w-full max-w-3xl gap-8 md:grid-cols-2">
+              <Card className="shadow-lg">
+                <CardHeader className="items-center">
+                  <CardTitle className="text-2xl text-primary">For Students</CardTitle>
+                  <CardDescription>Connect with mentors and explore opportunities.</CardDescription>
+                </CardHeader>
+                <CardContent className="flex flex-col gap-3">
+                  <Button size="lg" asChild className="w-full">
+                    <Link href="/login?userType=student">Student Login</Link>
+                  </Button>
+                  <Button size="lg" variant="outline" asChild className="w-full">
+                    <Link href="/register?userType=student">Student Registration</Link>
+                  </Button>
+                </CardContent>
+              </Card>
+
+              <Card className="shadow-lg">
+                <CardHeader className="items-center">
+                  <CardTitle className="text-2xl text-primary">For Alumni</CardTitle>
+                  <CardDescription>Offer mentorship and reconnect with peers.</CardDescription>
+                </CardHeader>
+                <CardContent className="flex flex-col gap-3">
+                  <Button size="lg" asChild className="w-full">
+                    <Link href="/login?userType=alumni">Alumni Login</Link>
+                  </Button>
+                  <Button size="lg" variant="outline" asChild className="w-full">
+                    <Link href="/register?userType=alumni">Alumni Registration</Link>
+                  </Button>
+                </CardContent>
+              </Card>
             </div>
           </div>
         </div>
@@ -89,7 +114,7 @@ export default function HomePage() {
               <Link href={dept.href} key={dept.title} legacyBehavior>
                 <a className="block h-full">
                   <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 h-full flex flex-col text-center items-center p-6">
-                    <CardHeader className="p-0 mb-4"> {/* Adjusted padding and margin */}
+                    <CardHeader className="p-0 mb-4">
                       {dept.icon}
                       <CardTitle className="text-xl mt-2">{dept.title}</CardTitle>
                     </CardHeader>

@@ -1,5 +1,3 @@
-"use client";
-
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm, Controller } from "react-hook-form";
 import { z } from "zod";
@@ -19,7 +17,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation"; // Added useSearchParams
 import { handleRegistration } from "@/lib/actions"; 
 import type { RegistrationFormData } from "@/lib/types";
 import {
@@ -66,6 +64,8 @@ export default function RegistrationForm() {
   const { register: authRegister } = useAuth(); 
   const { toast } = useToast();
   const router = useRouter();
+  const searchParams = useSearchParams();
+  const initialUserTypeFromQuery = searchParams.get('userType');
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -74,7 +74,7 @@ export default function RegistrationForm() {
       email: "",
       password: "",
       confirmPassword: "",
-      userType: undefined,
+      userType: (initialUserTypeFromQuery === 'student' || initialUserTypeFromQuery === 'alumni') ? initialUserTypeFromQuery : undefined,
       graduationYear: undefined,
       expectedGraduationYear: undefined,
       major: undefined,
@@ -99,7 +99,7 @@ export default function RegistrationForm() {
       company: values.company,
       linkedinProfile: values.linkedinProfile,
       willingToMentor: values.willingToMentor ?? false,
-      userType: values.userType!, // userType is guaranteed by schema if validation passes this far
+      userType: values.userType!, 
       ...(values.userType === 'alumni' 
         ? { graduationYear: values.graduationYear! } 
         : { expectedGraduationYear: values.expectedGraduationYear! })
@@ -112,7 +112,6 @@ export default function RegistrationForm() {
         title: "Registration Successful",
         description: result.message,
       });
-      // The authRegister in useAuth now expects userType and year.
       const year = values.userType === 'alumni' ? values.graduationYear! : values.expectedGraduationYear!;
       authRegister(values.name, values.email, values.userType!, year, values.major); 
       router.push('/dashboard'); 
@@ -148,7 +147,7 @@ export default function RegistrationForm() {
                   <FormControl>
                     <RadioGroup
                       onValueChange={field.onChange}
-                      defaultValue={field.value}
+                      defaultValue={field.value} // defaultValue is set by useForm
                       className="flex flex-col space-y-1 md:flex-row md:space-y-0 md:space-x-4"
                     >
                       <FormItem className="flex items-center space-x-3 space-y-0">
@@ -343,7 +342,7 @@ export default function RegistrationForm() {
                     <Checkbox
                       checked={field.value}
                       onCheckedChange={field.onChange}
-                      disabled={userType === 'student'} // Students typically don't mentor in this context
+                      disabled={userType === 'student'} 
                     />
                   </FormControl>
                   <div className="space-y-1 leading-none">
