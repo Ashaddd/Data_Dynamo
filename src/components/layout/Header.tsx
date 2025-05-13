@@ -1,3 +1,4 @@
+
 "use client";
 
 import Link from 'next/link';
@@ -14,19 +15,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { LogOut, UserCircle, LayoutDashboard, Menu, Bell, MessageSquare, X } from 'lucide-react'; // Added X for SheetClose
+import { LogOut, UserCircle, LayoutDashboard, Menu, Bell, MessageSquare, X } from 'lucide-react'; 
 import { Sheet, SheetContent, SheetTrigger, SheetClose } from "@/components/ui/sheet";
 import { usePathname } from 'next/navigation';
 import { cn } from '@/lib/utils';
-import { useToast } from '@/hooks/use-toast';
 import { useState } from 'react';
-import NotificationPanel from './NotificationPanel'; // Import the new NotificationPanel
+import NotificationPanel from './NotificationPanel';
+import ChatPanel from './ChatPanel'; // Import the new ChatPanel
 
 export default function Header() {
   const { user, logout, loading } = useAuth();
   const pathname = usePathname();
-  const { toast } = useToast();
   const [isNotificationPanelOpen, setIsNotificationPanelOpen] = useState(false);
+  const [isChatPanelOpen, setIsChatPanelOpen] = useState(false); // State for chat panel
 
   const getInitials = (name: string) => {
     if (!name) return 'U';
@@ -35,11 +36,12 @@ export default function Header() {
 
   const handleNotificationClick = () => {
     setIsNotificationPanelOpen(prev => !prev);
+    if (isChatPanelOpen) setIsChatPanelOpen(false); // Close chat panel if open
   };
 
   const handleMessagesClick = () => {
-    // For now, this shows a toast. In a real app, it would open a message panel/page.
-    toast({ title: "Messages", description: "Messages panel would open here." });
+    setIsChatPanelOpen(prev => !prev);
+    if (isNotificationPanelOpen) setIsNotificationPanelOpen(false); // Close notification panel if open
   };
 
   const MobileNav = () => (
@@ -83,11 +85,11 @@ export default function Header() {
                     </Button>
                 </SheetClose>
               ))}
-              <Button variant="ghost" onClick={handleNotificationClick} className="justify-start">
+              <Button variant="ghost" onClick={() => { handleNotificationClick(); }} className="justify-start">
                 <Bell className="mr-2 h-5 w-5" />
                 Notifications
               </Button>
-              <Button variant="ghost" onClick={handleMessagesClick} className="justify-start">
+              <Button variant="ghost" onClick={() => { handleMessagesClick(); }} className="justify-start">
                 <MessageSquare className="mr-2 h-5 w-5" />
                 Messages
               </Button>
@@ -205,6 +207,7 @@ export default function Header() {
         </div>
       </header>
       <NotificationPanel isOpen={isNotificationPanelOpen} onClose={() => setIsNotificationPanelOpen(false)} />
+      <ChatPanel isOpen={isChatPanelOpen} onClose={() => setIsChatPanelOpen(false)} /> {/* Add ChatPanel */}
     </>
   );
 }

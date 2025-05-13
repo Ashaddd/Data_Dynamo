@@ -96,3 +96,19 @@ export interface AppNotification {
     avatarUrl?: string;
   };
 }
+
+export interface ChatConversation {
+  id: string;
+  participant: {
+    id: string;
+    name: string;
+    avatarUrl?: string;
+    type: 'student' | 'alumni'; // Type of the other participant
+  };
+  lastMessage: {
+    text: string;
+    timestamp: string; // ISO date string
+    isReadByCurrentUser: boolean; // Whether the current user has read this last message
+  };
+  unreadCount: number; // Number of unread messages for the current user in this conversation
+}
