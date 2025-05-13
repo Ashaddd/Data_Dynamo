@@ -1,3 +1,119 @@
-export default function Home() {
-  return <></>;
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { SITE_DESCRIPTION, SITE_NAME } from "@/lib/constants";
+import { Award, CalendarCheck, Handshake, Lightbulb, Users, GraduationCap } from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+
+const features = [
+  {
+    icon: <Users className="h-8 w-8 text-primary" />,
+    title: "Alumni Profiles",
+    description: "Register and manage your profile, share your journey, and connect with peers."
+  },
+  {
+    icon: <Award className="h-8 w-8 text-primary" />,
+    title: "Notable Alumni",
+    description: "Discover and celebrate the achievements of distinguished alumni from our community."
+  },
+  {
+    icon: <CalendarCheck className="h-8 w-8 text-primary" />,
+    title: "Events & News",
+    description: "Stay updated with the latest college events, alumni meetups, and news."
+  },
+  {
+    icon: <Handshake className="h-8 w-8 text-primary" />,
+    title: "Mentorship Hub",
+    description: "Find or become a mentor, share knowledge, and foster growth within the network."
+  },
+  {
+    icon: <Lightbulb className="h-8 w-8 text-primary" />,
+    title: "AI Mentor Matching",
+    description: "Intelligently connect with alumni mentors based on your career interests and their expertise."
+  },
+];
+
+export default function HomePage() {
+  return (
+    <div className="flex flex-col items-center">
+      {/* Hero Section */}
+      <section className="w-full py-12 md:py-24 lg:py-32 bg-gradient-to-br from-primary/10 via-background to-background">
+        <div className="container mx-auto max-w-7xl px-4 md:px-6 text-center">
+          <div className="flex flex-col items-center space-y-6">
+            <GraduationCap size={64} className="text-primary" />
+            <h1 className="text-4xl font-bold tracking-tight sm:text-5xl md:text-6xl text-foreground">
+              Welcome to {SITE_NAME}
+            </h1>
+            <p className="max-w-2xl text-lg text-muted-foreground md:text-xl">
+              {SITE_DESCRIPTION} Reconnect, share, and grow with your alma mater.
+            </p>
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Button size="lg" asChild>
+                <Link href="/register">Join the Network</Link>
+              </Button>
+              <Button size="lg" variant="outline" asChild>
+                <Link href="/login">Alumni Login</Link>
+              </Button>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Features Section */}
+      <section id="features" className="w-full py-12 md:py-24 lg:py-32">
+        <div className="container mx-auto max-w-7xl px-4 md:px-6">
+          <h2 className="text-3xl font-bold tracking-tight text-center sm:text-4xl text-foreground mb-12">
+            Platform Features
+          </h2>
+          <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
+            {features.map((feature) => (
+              <Card key={feature.title} className="shadow-lg hover:shadow-xl transition-shadow duration-300">
+                <CardHeader className="items-center text-center">
+                  {feature.icon}
+                  <CardTitle className="mt-4 text-xl">{feature.title}</CardTitle>
+                </CardHeader>
+                <CardContent className="text-center">
+                  <CardDescription>{feature.description}</CardDescription>
+                </CardContent>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Call to Action Section */}
+      <section className="w-full py-12 md:py-24 lg:py-32 bg-muted/50">
+        <div className="container mx-auto max-w-7xl px-4 md:px-6 text-center">
+          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl text-foreground">
+            Ready to Reconnect?
+          </h2>
+          <p className="mt-4 max-w-xl mx-auto text-lg text-muted-foreground">
+            Become an active member of the {SITE_NAME} community today. Share your experiences, mentor current students, and stay informed.
+          </p>
+          <div className="mt-8">
+            <Button size="lg" asChild>
+              <Link href="/register">Create Your Profile</Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+      
+      {/* Placeholder for Contact Section */}
+       <section id="contact" className="w-full py-12 md:py-24 lg:py-32">
+        <div className="container mx-auto max-w-7xl px-4 md:px-6 text-center">
+          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl text-foreground">
+            Get In Touch
+          </h2>
+          <p className="mt-4 max-w-xl mx-auto text-lg text-muted-foreground">
+            Have questions or suggestions? We'd love to hear from you.
+          </p>
+          <div className="mt-8">
+            <Button size="lg" variant="outline" asChild>
+              <Link href="mailto:contact@nexus.alumni">Contact Us</Link>
+            </Button>
+          </div>
+        </div>
+      </section>
+    </div>
+  );
 }
