@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -15,7 +14,11 @@ import {
   CarouselItem,
   CarouselNext,
   CarouselPrevious,
-} from "@/components/ui/carousel"; // Import the new Carousel component
+} from "@/components/ui/carousel";
+import { useState } from "react";
+import type { Alumni } from "@/lib/types";
+import AlumniDetailModal from "@/components/alumni/AlumniDetailModal";
+
 
 const features = [
   {
@@ -86,6 +89,20 @@ const departmentShowcase = [
 export default function PublicHomePageContent() {
   const { user, loading } = useAuth();
   const notableAlumniForSlider = mockAlumni.filter(alumni => alumni.isNotable && alumni.profilePictureUrl).slice(0, 5); // Take first 5 notable for slider
+  
+  const [selectedAlumni, setSelectedAlumni] = useState<Alumni | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const handleAlumniCardClick = (alum: Alumni) => {
+    setSelectedAlumni(alum);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedAlumni(null);
+  };
+
 
   return (
     <div className="flex flex-col items-center">
@@ -125,7 +142,12 @@ export default function PublicHomePageContent() {
                 {notableAlumniForSlider.map((alumni) => (
                   <CarouselItem key={alumni.id} className="md:basis-1/2 lg:basis-1/3">
                     <div className="p-1">
-                      <Card className="shadow-lg overflow-hidden h-full">
+                      <Card 
+                        className="shadow-lg overflow-hidden h-full cursor-pointer group"
+                        onClick={() => handleAlumniCardClick(alumni)}
+                        onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') handleAlumniCardClick(alumni); }}
+                        tabIndex={0}
+                      >
                         <CardContent className="flex flex-col items-center justify-center p-0 aspect-[3/4] relative">
                           {alumni.profilePictureUrl && (
                              <Image
@@ -240,7 +262,14 @@ export default function PublicHomePageContent() {
           </div>
         </div>
       </section>
+      
+      {selectedAlumni && (
+        <AlumniDetailModal
+          alumni={selectedAlumni}
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+        />
+      )}
     </div>
   );
 }
-
