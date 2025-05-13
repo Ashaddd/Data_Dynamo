@@ -1,5 +1,5 @@
 import ProfileForm from '@/components/alumni/ProfileForm';
-import { Card, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import { Card, CardDescription, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
 import type { Metadata } from 'next';
 
 export const metadata: Metadata = {
