@@ -1,6 +1,8 @@
+
 "use client";
 
-import { useFormState, useFormStatus } from "react-dom";
+import { useActionState } from "react"; // Changed from react-dom's useFormState
+import { useFormStatus } from "react-dom"; // useFormStatus remains from react-dom
 import { Textarea } from "@/components/ui/textarea";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -31,7 +33,7 @@ function SubmitButton() {
 }
 
 export default function AiMentorMatchForm() {
-  const [state, formAction] = useFormState(handleAiMentorMatch, initialState);
+  const [state, formAction] = useActionState(handleAiMentorMatch, initialState); // Changed useFormState to useActionState
 
   return (
     <div className="space-y-6">
