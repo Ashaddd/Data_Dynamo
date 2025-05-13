@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -18,7 +19,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter, useSearchParams } from "next/navigation";
-import { handleLogin } from "@/lib/actions"; // Using Server Action
+import { handleLogin } from "@/lib/actions"; 
 
 const formSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address." }),
@@ -26,7 +27,7 @@ const formSchema = z.object({
 });
 
 export default function LoginForm() {
-  const { login: authLogin } = useAuth(); // From mock auth context
+  const { login: authContextLogin } = useAuth(); 
   const { toast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -53,15 +54,15 @@ export default function LoginForm() {
         title: "Login Successful",
         description: result.message || `Welcome back, ${result.user.email}!`,
       });
-      // Auth context login expects: email, name, userType, year, major
-      // The handleLogin server action should ideally return all these from DB.
-      // For now, using the mock structure returned by handleLogin.
-      authLogin(
+      // The handleLogin action returns a user object which might include an ID from DB.
+      // If not, useAuth.login will generate one for the mock context.
+      authContextLogin(
+        result.user.id || '', // Pass ID from server action result if exists
         result.user.email, 
-        result.user.name, // Name from mockUser in handleLogin
-        result.user.userType, // userType from mockUser
-        result.user.year, // year (grad or expected) from mockUser
-        result.user.major // major from mockUser
+        result.user.name,
+        result.user.userType,
+        result.user.year,
+        result.user.major
       ); 
       router.push(redirectUrl);
     } else {

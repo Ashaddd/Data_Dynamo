@@ -1,24 +1,25 @@
+
 "use client";
 
 import React, { useState, useEffect, createContext, useContext, ReactNode } from 'react';
-import { useRouter } from 'next/navigation'; // Use next/navigation for App Router
+import { useRouter } from 'next/navigation'; 
 
 export interface MockUser {
-  id: string;
+  id: string; // This ID should correspond to the Firestore document ID (UID in real Firebase Auth)
   name: string;
   email: string;
   userType: 'student' | 'alumni';
-  graduationYear?: string; // For alumni (string from form/localStorage)
-  expectedGraduationYear?: string; // For students (string from form/localStorage)
+  graduationYear?: string; 
+  expectedGraduationYear?: string; 
   major?: string;
 }
 
 interface AuthContextType {
   user: MockUser | null;
   loading: boolean;
-  login: (email: string, name: string, userType: 'student' | 'alumni', year: string, major?: string) => void;
+  login: (id: string, email: string, name: string, userType: 'student' | 'alumni', year: string, major?: string) => void;
   logout: () => void;
-  register: (name: string, email: string, userType: 'student' | 'alumni', year: string, major: string) => void;
+  register: (id: string, name: string, email: string, userType: 'student' | 'alumni', year: string, major: string) => void; // id added
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -29,7 +30,6 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const router = useRouter();
 
   useEffect(() => {
-    // Simulate checking auth status from localStorage
     try {
       const storedUser = localStorage.getItem('nexus-alumni-user');
       if (storedUser) {
@@ -42,9 +42,9 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(false);
   }, []);
 
-  const login = (email: string, name: string, userType: 'student' | 'alumni', year: string, major?: string) => {
+  const login = (id: string, email: string, name: string, userType: 'student' | 'alumni', year: string, major?: string) => {
     const mockUser: MockUser = { 
-      id: Date.now().toString(), 
+      id: id || Date.now().toString(), // Use provided ID or generate if empty (for initial mock login)
       name, 
       email, 
       userType,
@@ -59,7 +59,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     try {
       localStorage.setItem('nexus-alumni-user', JSON.stringify(mockUser));
       setUser(mockUser);
-      router.push('/dashboard');
+      // router.push('/dashboard'); // Navigation should be handled by the calling component (e.g., LoginForm)
     } catch (error) {
       console.error("Failed to save user to localStorage", error);
     }
@@ -75,11 +75,10 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const register = (name: string, email: string, userType: 'student' | 'alumni', year: string, major: string) => {
-    // In a real app, this would hit an API and then call login upon success
-    console.log('Mock register:', { name, email, userType, year, major });
-    // For registration, the 'year' parameter is either graduationYear or expectedGraduationYear
-    login(email, name, userType, year, major); 
+  const register = (id: string, name: string, email: string, userType: 'student' | 'alumni', year: string, major: string) => {
+    console.log('Mock register in useAuth context:', { id, name, email, userType, year, major });
+    // After server action `handleRegistration` stores in DB, this updates client-side context
+    login(id, email, name, userType, year, major); 
   };
 
   return (

@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -8,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import {
   Form,
   FormControl,
-  FormDescription,
   FormField,
   FormItem,
   FormLabel,
@@ -19,7 +19,7 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
-import { useRouter, useSearchParams } from "next/navigation"; // Added useSearchParams
+import { useRouter, useSearchParams } from "next/navigation"; 
 import { handleRegistration } from "@/lib/actions"; 
 import type { RegistrationFormData } from "@/lib/types";
 import {
@@ -45,6 +45,13 @@ const formSchema = z.object({
   company: z.string().optional(),
   linkedinProfile: z.string().url({ message: "Please enter a valid URL." }).optional().or(z.literal('')),
   willingToMentor: z.boolean().default(false).optional(),
+  // Optional fields from ProfileFormData that can be collected at registration
+  industry: z.string().optional(),
+  skills: z.array(z.string()).optional(), // Assuming multi-select is not part of this form for simplicity, or handle separately
+  interests: z.array(z.string()).optional(),
+  bio: z.string().max(500, "Bio cannot exceed 500 characters.").optional(),
+  achievements: z.string().max(500, "Achievements cannot exceed 500 characters.").optional(),
+
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Passwords don't match",
   path: ["confirmPassword"], 
@@ -63,7 +70,7 @@ const formSchema = z.object({
   });
 
 export default function RegistrationForm() {
-  const { register: authRegister } = useAuth(); 
+  const { register: authContextRegister } = useAuth(); 
   const { toast } = useToast();
   const router = useRouter();
   const searchParams = useSearchParams();
@@ -84,38 +91,51 @@ export default function RegistrationForm() {
       company: "",
       linkedinProfile: "",
       willingToMentor: false,
+      industry: "",
+      skills: [],
+      interests: [],
+      bio: "",
+      achievements: "",
     },
   });
 
   const userType = form.watch("userType");
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
-    // Prepare data according to RegistrationFormData structure
+    // Prepare data according to RegistrationFormData structure for the server action
     const dataToSubmit: RegistrationFormData = {
       name: values.name,
       email: values.email,
       password: values.password,
       confirmPassword: values.confirmPassword,
       major: values.major,
-      currentRole: values.currentRole,
-      company: values.company,
-      linkedinProfile: values.linkedinProfile,
+      currentRole: values.currentRole || "", // Ensure empty strings if optional and not filled
+      company: values.company || "",
+      linkedinProfile: values.linkedinProfile || "",
       willingToMentor: values.willingToMentor ?? false,
       userType: values.userType!, 
       ...(values.userType === 'alumni' 
         ? { graduationYear: values.graduationYear! } 
-        : { expectedGraduationYear: values.expectedGraduationYear! })
+        : { expectedGraduationYear: values.expectedGraduationYear! }),
+      // Pass other optional fields
+      industry: values.industry || "",
+      skills: values.skills || [],
+      interests: values.interests || [],
+      bio: values.bio || "",
+      achievements: values.achievements || "",
+      userId: Date.now().toString(), // Generate a temporary ID for mock context, server action will use this for Firestore doc ID
     };
     
     const result = await handleRegistration({}, dataToSubmit);
 
-    if (result.message) {
+    if (result.message && result.userId) {
       toast({
         title: "Registration Successful",
         description: result.message,
       });
       const year = values.userType === 'alumni' ? values.graduationYear! : values.expectedGraduationYear!;
-      authRegister(values.name, values.email, values.userType!, year, values.major); 
+      // Use the userId returned from the server action (which should be the Firestore doc ID)
+      authContextRegister(result.userId, values.name, values.email, values.userType!, year, values.major); 
       router.push('/dashboard'); 
     } else if (result.error) {
       toast({
@@ -149,7 +169,7 @@ export default function RegistrationForm() {
                   <FormControl>
                     <RadioGroup
                       onValueChange={field.onChange}
-                      defaultValue={field.value} // defaultValue is set by useForm
+                      defaultValue={field.value}
                       className="flex flex-col space-y-1 md:flex-row md:space-y-0 md:space-x-4"
                     >
                       <FormItem className="flex items-center space-x-3 space-y-0">
@@ -303,7 +323,7 @@ export default function RegistrationForm() {
                 <FormItem>
                   <FormLabel>Current Role (Optional)</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., Software Engineer Intern (if student), or Software Engineer (if alumni)" {...field} />
+                    <Input placeholder="e.g., Software Engineer Intern (if student), or Software Engineer (if alumni)" {...field} value={field.value ?? ""} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -316,7 +336,7 @@ export default function RegistrationForm() {
                 <FormItem>
                   <FormLabel>Company / Organization (Optional)</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., University Name (if student), or Tech Corp (if alumni)" {...field} />
+                    <Input placeholder="e.g., University Name (if student), or Tech Corp (if alumni)" {...field} value={field.value ?? ""} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -329,7 +349,7 @@ export default function RegistrationForm() {
                 <FormItem>
                   <FormLabel>LinkedIn Profile URL (Optional)</FormLabel>
                   <FormControl>
-                    <Input placeholder="https://linkedin.com/in/yourprofile" {...field} />
+                    <Input placeholder="https://linkedin.com/in/yourprofile" {...field} value={field.value ?? ""} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>

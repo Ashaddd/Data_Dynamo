@@ -1,3 +1,4 @@
+
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -17,9 +18,9 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useToast } from "@/hooks/use-toast";
-import { handleProfileUpdate } from "@/lib/actions"; // Server Action
-import type { ProfileFormData } from "@/lib/types";
-import { useAuth, MockUser } from "@/hooks/use-auth";
+import { handleProfileUpdate } from "@/lib/actions"; 
+import type { ProfileFormData, Alumni } from "@/lib/types";
+import { useAuth } from "@/hooks/use-auth";
 import { useEffect, useState } from "react";
 import {
   Select,
@@ -31,13 +32,16 @@ import {
 import { GRADUATION_YEAR_OPTIONS, EXPECTED_GRADUATION_YEAR_OPTIONS, MAJORS_DEPARTMENTS, INDUSTRIES, SKILLS_INTERESTS } from "@/lib/constants";
 import { Badge } from "@/components/ui/badge";
 import { X, Info } from "lucide-react";
-import { mockAlumni } from "@/data/alumni"; // For mock data
+import { db } from '@/lib/firebase'; // Import Firestore
+import { doc, getDoc } from 'firebase/firestore';
+import { Skeleton } from "@/components/ui/skeleton";
 
-// Schema aligned with server action
+
 const formSchema = z.object({
+  userId: z.string().optional(), // For passing to action, not necessarily displayed
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
   email: z.string().email({ message: "Please enter a valid email address." }),
-  userType: z.enum(["student", "alumni"]), // Read-only after registration
+  userType: z.enum(["student", "alumni"]), 
   graduationYear: z.string().optional(),
   expectedGraduationYear: z.string().optional(),
   major: z.string({ required_error: "Please select your major/department."}),
@@ -65,7 +69,6 @@ const formSchema = z.object({
   });
 
 
-// Helper for multi-select like experience with badges
 const MultiSelectBadgeField = ({
   value,
   onChange,
@@ -123,20 +126,21 @@ const MultiSelectBadgeField = ({
 
 
 export default function ProfileForm() {
-  const { user } = useAuth();
+  const { user, loading: authLoading } = useAuth();
   const { toast } = useToast();
-  const [isLoading, setIsLoading] = useState(true);
+  const [isFetchingProfile, setIsFetchingProfile] = useState(true);
 
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      name: "",
-      email: "",
-      userType: undefined, // Will be set from user context
+      userId: user?.id || "",
+      name: user?.name || "",
+      email: user?.email || "",
+      userType: user?.userType || undefined, 
       graduationYear: "",
       expectedGraduationYear: "",
-      major: "",
+      major: user?.major || "",
       currentRole: "",
       company: "",
       industry: "",
@@ -150,67 +154,100 @@ export default function ProfileForm() {
   });
   
   useEffect(() => {
-    if (user) {
-      // In a real app, fetch full profile data from backend using user.id
-      // For mock, find user in mockAlumni or use stored user info from auth context
-      const alumniProfile = user.userType === 'alumni' ? mockAlumni.find(a => a.email === user.email) : null;
-      
-      let dataToSet: Partial<z.infer<typeof formSchema>> = {
-        name: user.name,
-        email: user.email,
-        userType: user.userType,
-        major: user.major || "",
-        skills: [], // Default empty, should be populated if alumniProfile exists
-        interests: [], // Default empty
-        willingToMentor: false, // Default
-      };
+    if (user && user.id) {
+      setIsFetchingProfile(true);
+      const fetchProfile = async () => {
+        try {
+          const docRef = doc(db, "users", user.id);
+          const docSnap = await getDoc(docRef);
+          
+          let dataToSet: Partial<z.infer<typeof formSchema>> = { // Use z.infer for type safety
+            userId: user.id,
+            name: user.name,
+            email: user.email,
+            userType: user.userType,
+            major: user.major || "", // Default from auth context
+          };
 
-      if (user.userType === 'alumni') {
-        dataToSet.graduationYear = user.graduationYear || alumniProfile?.graduationYear.toString();
-        if (alumniProfile) {
+          if (docSnap.exists()) {
+            const profileData = docSnap.data() as ProfileFormData & { graduationYear?: number | string; expectedGraduationYear?: string }; // Firestore data
+            
             dataToSet = {
-                ...dataToSet,
-                currentRole: alumniProfile.currentRole,
-                company: alumniProfile.company,
-                industry: alumniProfile.industry,
-                skills: alumniProfile.skills,
-                interests: alumniProfile.interests,
-                linkedinProfile: alumniProfile.linkedinProfile,
-                bio: alumniProfile.bio,
-                achievements: alumniProfile.achievements,
-                willingToMentor: alumniProfile.willingToMentor,
+              ...dataToSet, // Base from auth
+              name: profileData.name || user.name, // Prefer Firestore if available
+              major: profileData.major || user.major,
+              currentRole: profileData.currentRole || "",
+              company: profileData.company || "",
+              industry: profileData.industry || "",
+              skills: profileData.skills || [],
+              interests: profileData.interests || [],
+              linkedinProfile: profileData.linkedinProfile || "",
+              bio: profileData.bio || "",
+              achievements: profileData.achievements || "",
+              willingToMentor: profileData.willingToMentor || false,
             };
+            if (profileData.userType === 'alumni') {
+              dataToSet.graduationYear = profileData.graduationYear?.toString() || user.graduationYear || "";
+            } else if (profileData.userType === 'student') {
+              dataToSet.expectedGraduationYear = profileData.expectedGraduationYear?.toString() || user.expectedGraduationYear || "";
+            }
+          } else {
+            // No profile in Firestore, use defaults from auth context / initial form values
+            if (user.userType === 'alumni') {
+              dataToSet.graduationYear = user.graduationYear || "";
+            } else if (user.userType === 'student') {
+              dataToSet.expectedGraduationYear = user.expectedGraduationYear || "";
+            }
+          }
+          form.reset(dataToSet as z.infer<typeof formSchema>);
+        } catch (error) {
+          console.error("Error fetching profile:", error);
+          toast({ title: "Error", description: "Could not load your profile data from the database.", variant: "destructive" });
+           // Fallback to auth context data if Firestore fetch fails
+           let fallbackData: Partial<z.infer<typeof formSchema>> = {
+            userId: user.id,
+            name: user.name,
+            email: user.email,
+            userType: user.userType,
+            major: user.major || "",
+          };
+          if (user.userType === 'alumni') fallbackData.graduationYear = user.graduationYear || "";
+          if (user.userType === 'student') fallbackData.expectedGraduationYear = user.expectedGraduationYear || "";
+          form.reset(fallbackData as z.infer<typeof formSchema>);
+        } finally {
+          setIsFetchingProfile(false);
         }
-      } else if (user.userType === 'student') {
-        dataToSet.expectedGraduationYear = user.expectedGraduationYear || "";
-        // Students might have less pre-filled data or different fields
-        // For this mock, we'll assume less data for students initially beyond auth context.
-      }
-      
-      form.reset(dataToSet as z.infer<typeof formSchema>);
-      setIsLoading(false);
+      };
+      fetchProfile();
+    } else if (!authLoading) { // If user is null and auth is not loading, stop fetching
+        setIsFetchingProfile(false);
     }
-  }, [user, form]);
+  }, [user, form, toast, authLoading]);
 
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    if (!user || !user.id) {
+      toast({ title: "Error", description: "User not authenticated.", variant: "destructive" });
+      return;
+    }
+
     const formData = new FormData();
-    // Append common fields
+    formData.append('userId', user.id); // Ensure userId is included for the action
+
     Object.entries(values).forEach(([key, value]) => {
       if (key === 'skills' || key === 'interests') {
         (value as string[]).forEach(item => formData.append(key, item));
       } else if (typeof value === 'boolean') {
-        formData.append(key, value ? 'on' : '');
-      } else if (value !== undefined && value !== null) {
+        formData.append(key, value ? 'on' : ''); // Standard for HTML form checkbox
+      } else if (value !== undefined && value !== null && key !== 'userId') { // userId already added
         formData.append(key, String(value));
       }
     });
     
     // Ensure userType is explicitly set (it's read-only on form but needed by action)
     if (user?.userType) {
-        formData.set('userType', user.userType);
+        formData.set('userType', user.userType); // Overwrite if already set from values, ensure it's from auth
     }
-
 
     const result = await handleProfileUpdate({}, formData); 
 
@@ -233,9 +270,20 @@ export default function ProfileForm() {
     }
   }
   
-  if (isLoading) {
-    return <p>Loading profile...</p>; 
+  if (authLoading || isFetchingProfile) {
+    return (
+        <div className="space-y-4">
+            <Skeleton className="h-10 w-1/3" />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+            </div>
+            <Skeleton className="h-20 w-full" />
+            <Skeleton className="h-10 w-1/4" />
+        </div>
+    );
   }
+
   if (!user) {
     return <p>User not found. Please log in.</p>;
   }
@@ -253,8 +301,8 @@ export default function ProfileForm() {
                 </p>
             </div>
         </div>
-        {/* Hidden field for userType, though it should ideally come from session on server */}
-        <input type="hidden" {...form.register("userType")} value={user.userType} />
+        
+        <input type="hidden" {...form.register("userId")} value={user.id} />
 
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -291,7 +339,7 @@ export default function ProfileForm() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Graduation Year</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value || ""}>
                     <FormControl><SelectTrigger><SelectValue placeholder="Select year" /></SelectTrigger></FormControl>
                     <SelectContent>{GRADUATION_YEAR_OPTIONS.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
                   </Select>
@@ -307,7 +355,7 @@ export default function ProfileForm() {
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Expected Graduation Year</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value || ""}>
                     <FormControl><SelectTrigger><SelectValue placeholder="Select year" /></SelectTrigger></FormControl>
                     <SelectContent>{EXPECTED_GRADUATION_YEAR_OPTIONS.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
                   </Select>
@@ -322,7 +370,7 @@ export default function ProfileForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Major / Department</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
+                <Select onValueChange={field.onChange} value={field.value || ""}>
                   <FormControl><SelectTrigger><SelectValue placeholder="Select major" /></SelectTrigger></FormControl>
                   <SelectContent>{MAJORS_DEPARTMENTS.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
                 </Select>
@@ -354,7 +402,7 @@ export default function ProfileForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Current Role {user.userType === 'student' && '(e.g., Student, Intern)'}</FormLabel>
-                <FormControl><Input {...field} placeholder={user.userType === 'student' ? "e.g., Computer Science Student" : "e.g., Senior Software Engineer"} /></FormControl>
+                <FormControl><Input {...field} value={field.value || ""} placeholder={user.userType === 'student' ? "e.g., Computer Science Student" : "e.g., Senior Software Engineer"} /></FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -365,7 +413,7 @@ export default function ProfileForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Company / Organization {user.userType === 'student' && '(e.g., University Name)'}</FormLabel>
-                <FormControl><Input {...field} placeholder={user.userType === 'student' ? "e.g., State University" : "e.g., Acme Corp"} /></FormControl>
+                <FormControl><Input {...field} value={field.value || ""} placeholder={user.userType === 'student' ? "e.g., State University" : "e.g., Acme Corp"} /></FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -378,7 +426,7 @@ export default function ProfileForm() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>LinkedIn Profile URL</FormLabel>
-              <FormControl><Input {...field} placeholder="https://linkedin.com/in/yourprofile" /></FormControl>
+              <FormControl><Input {...field} value={field.value || ""} placeholder="https://linkedin.com/in/yourprofile" /></FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -426,7 +474,7 @@ export default function ProfileForm() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Bio / About Me</FormLabel>
-              <FormControl><Textarea {...field} rows={4} placeholder="Tell us a bit about yourself, your career journey, academic pursuits, and passions." /></FormControl>
+              <FormControl><Textarea {...field} value={field.value || ""} rows={4} placeholder="Tell us a bit about yourself, your career journey, academic pursuits, and passions." /></FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -437,7 +485,7 @@ export default function ProfileForm() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Notable Achievements / Contributions</FormLabel>
-              <FormControl><Textarea {...field} rows={3} placeholder="Share any significant achievements, projects, or contributions." /></FormControl>
+              <FormControl><Textarea {...field} value={field.value || ""} rows={3} placeholder="Share any significant achievements, projects, or contributions." /></FormControl>
               <FormMessage />
             </FormItem>
           )}

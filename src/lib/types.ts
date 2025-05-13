@@ -1,8 +1,10 @@
+
 export interface Alumni {
-  id: string;
+  id: string; // Corresponds to Firebase Auth UID in a real app
+  uid?: string; // Can be same as id, or specific Firebase UID field
   name: string;
   email: string;
-  userType: 'alumni'; // Alumni will always be 'alumni'
+  userType: 'alumni'; 
   graduationYear: number;
   major: string;
   currentRole?: string;
@@ -12,25 +14,26 @@ export interface Alumni {
   interests?: string[];
   linkedinProfile?: string;
   bio?: string;
-  achievements?: string; // Changed to single string for simplicity
+  achievements?: string; 
   profilePictureUrl?: string;
   isNotable?: boolean;
-  willingToMentor: boolean; // Made non-optional
-  contactInfo?: string; // For mentor matching
+  willingToMentor: boolean; 
+  contactInfo?: string; 
+  createdAt?: any; // Firestore Timestamp
+  updatedAt?: any; // Firestore Timestamp
 }
 
 export interface Event {
   id: string;
   title: string;
-  date: string; // ISO string or formatted date
+  date: string; 
   description: string;
   category: 'College Event' | 'Alumni Meetup' | 'Webinar' | 'Workshop' | 'Career Fair';
-  location?: string; // "Online" for virtual events
+  location?: string; 
   imageUrl?: string;
   registrationLink?: string;
 }
 
-// This type should align with MentorMatchOutput from src/ai/flows/mentor-matcher.ts
 export interface MatchedMentor {
   name: string;
   background: string;
@@ -39,7 +42,6 @@ export interface MatchedMentor {
   reason: string;
 }
 
-// For forms - base data for both student and alumni
 interface BaseProfileData {
   name: string;
   email: string;
@@ -53,23 +55,29 @@ interface BaseProfileData {
   bio?: string;
   achievements?: string;
   willingToMentor: boolean;
+  // Optional fields that might be part of the Firestore document but not strictly BaseProfile
+  profilePictureUrl?: string;
+  isNotable?: boolean;
+  contactInfo?: string;
+  createdAt?: any; 
+  updatedAt?: any; 
 }
 
-// Specific fields for student and alumni profiles
 export type ProfileFormData = BaseProfileData & (
-  | { userType: 'student'; expectedGraduationYear: string; graduationYear?: never }
-  | { userType: 'alumni'; graduationYear: string; expectedGraduationYear?: never }
+  | { userType: 'student'; expectedGraduationYear: string; graduationYear?: never; uid?: string; id?: string; }
+  | { userType: 'alumni'; graduationYear: string; expectedGraduationYear?: never; uid?: string; id?: string; }
 );
 
 
 export type RegistrationFormData = ProfileFormData & {
   password?: string; 
   confirmPassword?: string;
+  userId?: string; // For passing client-generated ID to server action if needed for mock
 };
 
 
 export interface MentorSearchFilters {
-  query: string; // Combined search for industry, skills, interests
+  query: string; 
   industry?: string[];
   skills?: string[];
 }
