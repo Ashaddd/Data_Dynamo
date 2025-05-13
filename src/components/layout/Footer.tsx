@@ -11,7 +11,7 @@ export default function Footer() {
           <div>
             <AppLogo iconSize={24} textSize="text-xl" />
             <p className="mt-1 text-sm text-foreground"> {/* Changed class for better visibility and positioning */}
-              Fostering connections, building futures.
+              A platform by alumni, for alumni and students.
             </p>
             <div className="mt-4 flex space-x-4">
               <Link href="#" className="text-muted-foreground hover:text-primary">
@@ -56,3 +56,4 @@ export default function Footer() {
     </footer>
   );
 }
+
