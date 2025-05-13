@@ -7,17 +7,18 @@ export interface MockUser {
   id: string;
   name: string;
   email: string;
-  // Add other relevant user fields from your Alumni type if needed
-  graduationYear?: number;
+  userType: 'student' | 'alumni';
+  graduationYear?: string; // For alumni (string from form/localStorage)
+  expectedGraduationYear?: string; // For students (string from form/localStorage)
   major?: string;
 }
 
 interface AuthContextType {
   user: MockUser | null;
   loading: boolean;
-  login: (email: string, name?: string) => void; // name is optional, used for register flow
+  login: (email: string, name: string, userType: 'student' | 'alumni', year: string, major?: string) => void;
   logout: () => void;
-  register: (name: string, email: string) => void;
+  register: (name: string, email: string, userType: 'student' | 'alumni', year: string, major: string) => void;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -41,8 +42,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     setLoading(false);
   }, []);
 
-  const login = (email: string, name: string = 'Mock User') => {
-    const mockUser: MockUser = { id: Date.now().toString(), name, email };
+  const login = (email: string, name: string, userType: 'student' | 'alumni', year: string, major?: string) => {
+    const mockUser: MockUser = { 
+      id: Date.now().toString(), 
+      name, 
+      email, 
+      userType,
+      major,
+    };
+    if (userType === 'alumni') {
+      mockUser.graduationYear = year;
+    } else {
+      mockUser.expectedGraduationYear = year;
+    }
+
     try {
       localStorage.setItem('nexus-alumni-user', JSON.stringify(mockUser));
       setUser(mockUser);
@@ -62,10 +75,11 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const register = (name: string, email: string) => {
+  const register = (name: string, email: string, userType: 'student' | 'alumni', year: string, major: string) => {
     // In a real app, this would hit an API and then call login upon success
-    console.log('Mock register:', { name, email });
-    login(email, name); // Auto-login after mock registration
+    console.log('Mock register:', { name, email, userType, year, major });
+    // For registration, the 'year' parameter is either graduationYear or expectedGraduationYear
+    login(email, name, userType, year, major); 
   };
 
   return (

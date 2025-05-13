@@ -1,26 +1,29 @@
 "use client";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/use-auth";
-import { Award, CalendarCheck, Handshake, Users } from "lucide-react";
+import { Award, CalendarCheck, Handshake, Users, BrainCircuit, UserCog } from "lucide-react";
 import Link from "next/link";
 
 export default function DashboardOverviewPage() {
   const { user } = useAuth();
 
+  const userWelcomeName = user?.name || (user?.userType === 'student' ? 'Student' : 'Alumni');
+
   const quickLinks = [
-    { title: "My Profile", href: "/dashboard/profile", icon: Users, description: "View and update your information." },
+    { title: "My Profile", href: "/dashboard/profile", icon: UserCog, description: "View and update your information." },
     { title: "Notable Alumni", href: "/dashboard/notable-alumni", icon: Award, description: "See who's making an impact." },
     { title: "Events & News", href: "/dashboard/events", icon: CalendarCheck, description: "Stay updated with happenings." },
-    { title: "Mentorship Hub", href: "/dashboard/mentorship/search", icon: Handshake, description: "Find or become a mentor." },
+    { title: "Find a Mentor", href: "/dashboard/mentorship/search", icon: Handshake, description: "Connect with mentors." },
+    { title: "AI Mentor Match", href: "/dashboard/mentorship/match", icon: BrainCircuit, description: "Get AI mentor suggestions." },
   ];
 
   return (
     <div className="space-y-8">
       <Card className="shadow-md">
         <CardHeader>
-          <CardTitle className="text-3xl">Welcome, {user?.name || 'Alumni'}!</CardTitle>
+          <CardTitle className="text-3xl">Welcome, {userWelcomeName}!</CardTitle>
           <CardDescription>
-            This is your central hub for connecting with the alumni network, finding opportunities, and staying informed.
+            This is your central hub for connecting with the {user?.userType === 'student' ? 'student and alumni network' : 'alumni network'}, finding opportunities, and staying informed.
           </CardDescription>
         </CardHeader>
         <CardContent>
@@ -28,7 +31,7 @@ export default function DashboardOverviewPage() {
         </CardContent>
       </Card>
 
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-2">
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3"> {/* Adjusted for 5 items, can be 2 or 3 per row */}
         {quickLinks.map((link) => (
           <Link href={link.href} key={link.title} legacyBehavior>
             <a className="block">

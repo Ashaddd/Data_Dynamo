@@ -2,6 +2,7 @@ export interface Alumni {
   id: string;
   name: string;
   email: string;
+  userType: 'alumni'; // Alumni will always be 'alumni'
   graduationYear: number;
   major: string;
   currentRole?: string;
@@ -38,11 +39,10 @@ export interface MatchedMentor {
   reason: string;
 }
 
-// For forms
-export interface ProfileFormData {
+// For forms - base data for both student and alumni
+interface BaseProfileData {
   name: string;
   email: string;
-  graduationYear: string;
   major: string;
   currentRole?: string;
   company?: string;
@@ -55,10 +55,18 @@ export interface ProfileFormData {
   willingToMentor: boolean;
 }
 
-export interface RegistrationFormData extends ProfileFormData {
-  password?: string; // Optional for profile update
+// Specific fields for student and alumni profiles
+export type ProfileFormData = BaseProfileData & (
+  | { userType: 'student'; expectedGraduationYear: string; graduationYear?: never }
+  | { userType: 'alumni'; graduationYear: string; expectedGraduationYear?: never }
+);
+
+
+export type RegistrationFormData = ProfileFormData & {
+  password?: string; 
   confirmPassword?: string;
-}
+};
+
 
 export interface MentorSearchFilters {
   query: string; // Combined search for industry, skills, interests

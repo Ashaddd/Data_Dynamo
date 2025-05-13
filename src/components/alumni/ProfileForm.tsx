@@ -28,15 +28,18 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { GRADUATION_YEAR_OPTIONS, MAJORS_DEPARTMENTS, INDUSTRIES, SKILLS_INTERESTS } from "@/lib/constants";
+import { GRADUATION_YEAR_OPTIONS, EXPECTED_GRADUATION_YEAR_OPTIONS, MAJORS_DEPARTMENTS, INDUSTRIES, SKILLS_INTERESTS } from "@/lib/constants";
 import { Badge } from "@/components/ui/badge";
-import { X } from "lucide-react";
+import { X, Info } from "lucide-react";
 import { mockAlumni } from "@/data/alumni"; // For mock data
 
+// Schema aligned with server action
 const formSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
   email: z.string().email({ message: "Please enter a valid email address." }),
-  graduationYear: z.string({ required_error: "Please select your graduation year."}),
+  userType: z.enum(["student", "alumni"]), // Read-only after registration
+  graduationYear: z.string().optional(),
+  expectedGraduationYear: z.string().optional(),
   major: z.string({ required_error: "Please select your major/department."}),
   currentRole: z.string().optional(),
   company: z.string().optional(),
@@ -47,7 +50,19 @@ const formSchema = z.object({
   bio: z.string().max(500, "Bio cannot exceed 500 characters.").optional(),
   achievements: z.string().max(500, "Achievements cannot exceed 500 characters.").optional(),
   willingToMentor: z.boolean().default(false),
-});
+}).refine(data => {
+    if (data.userType === 'alumni') return !!data.graduationYear;
+    return true;
+  }, {
+    message: "Graduation year is required for alumni.",
+    path: ["graduationYear"],
+  }).refine(data => {
+    if (data.userType === 'student') return !!data.expectedGraduationYear;
+    return true;
+  }, {
+    message: "Expected graduation year is required for students.",
+    path: ["expectedGraduationYear"],
+  });
 
 
 // Helper for multi-select like experience with badges
@@ -68,7 +83,7 @@ const MultiSelectBadgeField = ({
     if (itemValue && !value.includes(itemValue)) {
       onChange([...value, itemValue]);
     }
-    setInputValue(""); // Clear input or reset select
+    setInputValue(""); 
   };
 
   const handleRemove = (itemToRemove: string) => {
@@ -110,14 +125,17 @@ const MultiSelectBadgeField = ({
 export default function ProfileForm() {
   const { user } = useAuth();
   const { toast } = useToast();
-  const [initialData, setInitialData] = useState<ProfileFormData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       name: "",
       email: "",
+      userType: undefined, // Will be set from user context
       graduationYear: "",
+      expectedGraduationYear: "",
       major: "",
       currentRole: "",
       company: "",
@@ -133,51 +151,68 @@ export default function ProfileForm() {
   
   useEffect(() => {
     if (user) {
-      // In a real app, fetch profile data from backend using user.id
-      // For mock, find user in mockAlumni or use stored user info
-      const alumniProfile = mockAlumni.find(a => a.email === user.email);
-      const dataToSet = alumniProfile ? {
-        name: alumniProfile.name,
-        email: alumniProfile.email,
-        graduationYear: alumniProfile.graduationYear.toString(),
-        major: alumniProfile.major, // This might need to be a value if using select
-        currentRole: alumniProfile.currentRole,
-        company: alumniProfile.company,
-        industry: alumniProfile.industry,
-        skills: alumniProfile.skills,
-        interests: alumniProfile.interests,
-        linkedinProfile: alumniProfile.linkedinProfile,
-        bio: alumniProfile.bio,
-        achievements: alumniProfile.achievements,
-        willingToMentor: alumniProfile.willingToMentor,
-      } : { // Fallback to user context data if no full profile found
+      // In a real app, fetch full profile data from backend using user.id
+      // For mock, find user in mockAlumni or use stored user info from auth context
+      const alumniProfile = user.userType === 'alumni' ? mockAlumni.find(a => a.email === user.email) : null;
+      
+      let dataToSet: Partial<z.infer<typeof formSchema>> = {
         name: user.name,
         email: user.email,
-        graduationYear: user.graduationYear?.toString() || "",
+        userType: user.userType,
         major: user.major || "",
-        skills: [],
-        interests: [],
-        willingToMentor: false,
+        skills: [], // Default empty, should be populated if alumniProfile exists
+        interests: [], // Default empty
+        willingToMentor: false, // Default
       };
-      form.reset(dataToSet as ProfileFormData); // Ensure type compatibility
-      setInitialData(dataToSet as ProfileFormData);
+
+      if (user.userType === 'alumni') {
+        dataToSet.graduationYear = user.graduationYear || alumniProfile?.graduationYear.toString();
+        if (alumniProfile) {
+            dataToSet = {
+                ...dataToSet,
+                currentRole: alumniProfile.currentRole,
+                company: alumniProfile.company,
+                industry: alumniProfile.industry,
+                skills: alumniProfile.skills,
+                interests: alumniProfile.interests,
+                linkedinProfile: alumniProfile.linkedinProfile,
+                bio: alumniProfile.bio,
+                achievements: alumniProfile.achievements,
+                willingToMentor: alumniProfile.willingToMentor,
+            };
+        }
+      } else if (user.userType === 'student') {
+        dataToSet.expectedGraduationYear = user.expectedGraduationYear || "";
+        // Students might have less pre-filled data or different fields
+        // For this mock, we'll assume less data for students initially beyond auth context.
+      }
+      
+      form.reset(dataToSet as z.infer<typeof formSchema>);
+      setIsLoading(false);
     }
   }, [user, form]);
 
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
     const formData = new FormData();
+    // Append common fields
     Object.entries(values).forEach(([key, value]) => {
-      if (Array.isArray(value)) {
-        value.forEach(item => formData.append(key, item as string));
+      if (key === 'skills' || key === 'interests') {
+        (value as string[]).forEach(item => formData.append(key, item));
       } else if (typeof value === 'boolean') {
-        formData.append(key, value ? 'on' : ''); // 'on' for true, empty for false for FormData
+        formData.append(key, value ? 'on' : '');
       } else if (value !== undefined && value !== null) {
         formData.append(key, String(value));
       }
     });
+    
+    // Ensure userType is explicitly set (it's read-only on form but needed by action)
+    if (user?.userType) {
+        formData.set('userType', user.userType);
+    }
 
-    const result = await handleProfileUpdate({}, formData); // Using server action
+
+    const result = await handleProfileUpdate({}, formData); 
 
     if (result.message) {
       toast({
@@ -198,13 +233,30 @@ export default function ProfileForm() {
     }
   }
   
-  if (!initialData && !user) {
-    return <p>Loading profile...</p>; // Or a skeleton loader
+  if (isLoading) {
+    return <p>Loading profile...</p>; 
   }
+  if (!user) {
+    return <p>User not found. Please log in.</p>;
+  }
+
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        
+        <div className="rounded-md border border-blue-300 bg-blue-50 p-4">
+            <div className="flex items-center gap-2">
+                <Info className="h-5 w-5 text-blue-600" />
+                <p className="text-sm text-blue-700">
+                    You are managing your profile as a <span className="font-semibold">{user.userType}</span>.
+                </p>
+            </div>
+        </div>
+        {/* Hidden field for userType, though it should ideally come from session on server */}
+        <input type="hidden" {...form.register("userType")} value={user.userType} />
+
+
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           <FormField
             control={form.control}
@@ -223,7 +275,7 @@ export default function ProfileForm() {
             render={({ field }) => (
               <FormItem>
                 <FormLabel>Email Address</FormLabel>
-                <FormControl><Input type="email" {...field} readOnly disabled /></FormControl> {/* Email usually not editable */}
+                <FormControl><Input type="email" {...field} readOnly disabled /></FormControl> 
                 <FormDescription>Email cannot be changed.</FormDescription>
                 <FormMessage />
               </FormItem>
@@ -232,20 +284,38 @@ export default function ProfileForm() {
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <FormField
-            control={form.control}
-            name="graduationYear"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Graduation Year</FormLabel>
-                <Select onValueChange={field.onChange} value={field.value}>
-                  <FormControl><SelectTrigger><SelectValue placeholder="Select year" /></SelectTrigger></FormControl>
-                  <SelectContent>{GRADUATION_YEAR_OPTIONS.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
-                </Select>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+          {user.userType === 'alumni' && (
+            <FormField
+              control={form.control}
+              name="graduationYear"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Graduation Year</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl><SelectTrigger><SelectValue placeholder="Select year" /></SelectTrigger></FormControl>
+                    <SelectContent>{GRADUATION_YEAR_OPTIONS.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
+          {user.userType === 'student' && (
+             <FormField
+              control={form.control}
+              name="expectedGraduationYear"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Expected Graduation Year</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl><SelectTrigger><SelectValue placeholder="Select year" /></SelectTrigger></FormControl>
+                    <SelectContent>{EXPECTED_GRADUATION_YEAR_OPTIONS.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          )}
           <FormField
             control={form.control}
             name="major"
@@ -267,8 +337,8 @@ export default function ProfileForm() {
           name="industry"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Industry</FormLabel>
-              <Select onValueChange={field.onChange} value={field.value}>
+              <FormLabel>Industry {user.userType === 'student' && '(e.g., aspired or current if interning)'}</FormLabel>
+              <Select onValueChange={field.onChange} value={field.value || ''}>
                 <FormControl><SelectTrigger><SelectValue placeholder="Select your industry" /></SelectTrigger></FormControl>
                 <SelectContent>{INDUSTRIES.map(opt => <SelectItem key={opt.value} value={opt.value}>{opt.label}</SelectItem>)}</SelectContent>
               </Select>
@@ -283,8 +353,8 @@ export default function ProfileForm() {
             name="currentRole"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Current Role</FormLabel>
-                <FormControl><Input {...field} placeholder="e.g., Senior Software Engineer" /></FormControl>
+                <FormLabel>Current Role {user.userType === 'student' && '(e.g., Student, Intern)'}</FormLabel>
+                <FormControl><Input {...field} placeholder={user.userType === 'student' ? "e.g., Computer Science Student" : "e.g., Senior Software Engineer"} /></FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -294,8 +364,8 @@ export default function ProfileForm() {
             name="company"
             render={({ field }) => (
               <FormItem>
-                <FormLabel>Company</FormLabel>
-                <FormControl><Input {...field} placeholder="e.g., Acme Corp" /></FormControl>
+                <FormLabel>Company / Organization {user.userType === 'student' && '(e.g., University Name)'}</FormLabel>
+                <FormControl><Input {...field} placeholder={user.userType === 'student' ? "e.g., State University" : "e.g., Acme Corp"} /></FormControl>
                 <FormMessage />
               </FormItem>
             )}
@@ -326,7 +396,7 @@ export default function ProfileForm() {
                         options={SKILLS_INTERESTS}
                         placeholder="Add skills"
                     />
-                    <FormDescription>Select skills relevant to your expertise.</FormDescription>
+                    <FormDescription>Select skills relevant to your expertise or studies.</FormDescription>
                     <FormMessage />
                 </FormItem>
             )}
@@ -341,7 +411,7 @@ export default function ProfileForm() {
                      <MultiSelectBadgeField 
                         value={field.value || []} 
                         onChange={field.onChange}
-                        options={SKILLS_INTERESTS} // Can use same list or create a dedicated one
+                        options={SKILLS_INTERESTS} 
                         placeholder="Add interests"
                     />
                     <FormDescription>Select interests for networking and mentorship.</FormDescription>
@@ -356,7 +426,7 @@ export default function ProfileForm() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Bio / About Me</FormLabel>
-              <FormControl><Textarea {...field} rows={4} placeholder="Tell us a bit about yourself, your career journey, and passions." /></FormControl>
+              <FormControl><Textarea {...field} rows={4} placeholder="Tell us a bit about yourself, your career journey, academic pursuits, and passions." /></FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -367,7 +437,7 @@ export default function ProfileForm() {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Notable Achievements / Contributions</FormLabel>
-              <FormControl><Textarea {...field} rows={3} placeholder="Share any significant achievements or contributions." /></FormControl>
+              <FormControl><Textarea {...field} rows={3} placeholder="Share any significant achievements, projects, or contributions." /></FormControl>
               <FormMessage />
             </FormItem>
           )}
@@ -379,12 +449,18 @@ export default function ProfileForm() {
           render={({ field }) => (
             <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 shadow-sm">
               <FormControl>
-                <Checkbox checked={field.value} onCheckedChange={field.onChange} />
+                <Checkbox 
+                    checked={field.value} 
+                    onCheckedChange={field.onChange} 
+                    disabled={user.userType === 'student'}
+                />
               </FormControl>
               <div className="space-y-1 leading-none">
                 <FormLabel>Willing to be a Mentor?</FormLabel>
                 <FormDescription>
-                  Opt-in to appear in mentorship searches and help current students.
+                  {user.userType === 'student' 
+                    ? "Mentorship is typically offered by alumni. You can seek mentorship through the platform." 
+                    : "Opt-in to appear in mentorship searches and help current students or fellow alumni."}
                 </FormDescription>
               </div>
             </FormItem>

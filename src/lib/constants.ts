@@ -3,7 +3,7 @@ import { Home, Users, CalendarDays, Search, UserPlus, LogIn, Award, UserCog, Bra
 import type { Alumni } from './types'; // For MOCK_ALUMNI_PROFILES_FOR_AI type if needed
 
 export const SITE_NAME = "Nexus Alumni";
-export const SITE_DESCRIPTION = "Connecting alumni, fostering mentorship, and building a stronger community.";
+export const SITE_DESCRIPTION = "Connecting students and alumni, fostering mentorship, and building a stronger community.";
 
 interface NavLink {
   href: string;
@@ -62,6 +62,7 @@ export const INDUSTRIES = [
   { value: "consulting", label: "Consulting" },
   { value: "manufacturing", label: "Manufacturing" },
   { value: "government", label: "Government / Public Sector" },
+  { value: "other", label: "Other" },
 ];
 
 export const SKILLS_INTERESTS = [
@@ -75,10 +76,20 @@ export const SKILLS_INTERESTS = [
   { value: "leadership", label: "Leadership" },
   { value: "public_speaking", label: "Public Speaking" },
   { value: "sustainability", label: "Sustainability" },
+  { value: "artificial_intelligence", label: "Artificial Intelligence" },
+  { value: "web_development", label: "Web Development" },
+  { value: "mobile_development", label: "Mobile Development" },
+  { value: "product_management", label: "Product Management" },
+  { value: "other", label: "Other" },
 ];
 
-export const GRADUATION_YEAR_OPTIONS = Array.from({ length: 50 }, (_, i) => {
+export const GRADUATION_YEAR_OPTIONS = Array.from({ length: 70 }, (_, i) => { // Increased range
   const year = new Date().getFullYear() - i;
+  return { value: year.toString(), label: year.toString() };
+});
+
+export const EXPECTED_GRADUATION_YEAR_OPTIONS = Array.from({ length: 10 }, (_, i) => { // For students, current year + next few years
+  const year = new Date().getFullYear() + i;
   return { value: year.toString(), label: year.toString() };
 });
 
@@ -86,12 +97,21 @@ export const MAJORS_DEPARTMENTS = [
   { value: "computer_science", label: "Computer Science" },
   { value: "business_administration", label: "Business Administration" },
   { value: "electrical_engineering", label: "Electrical Engineering" },
-  { value: "psychology", label: "Psychology" },
-  { value: "biology", label: "Biology" },
-  { value: "economics", label: "Economics" },
-  { value: "english_literature", label: "English Literature" },
   { value: "mechanical_engineering", label: "Mechanical Engineering" },
-  { value: "fine_arts", label: "Fine Arts" },
+  { value: "civil_engineering", label: "Civil Engineering" },
+  { value: "biology", label: "Biology" },
+  { value: "chemistry", label: "Chemistry" },
+  { value: "physics", label: "Physics" },
+  { value: "mathematics", label: "Mathematics" },
+  { value: "psychology", label: "Psychology" },
+  { value: "economics", label: "Economics" },
   { value: "political_science", label: "Political Science" },
+  { value: "history", label: "History" },
+  { value: "english_literature", label: "English Literature" },
+  { value: "fine_arts", label: "Fine Arts" },
+  { value: "communications", label: "Communications" },
+  { value: "nursing", label: "Nursing" },
+  { value: "public_health", label: "Public Health" },
+  { value: "environmental_science", label: "Environmental Science" },
+  { value: "other", label: "Other" },
 ];
-

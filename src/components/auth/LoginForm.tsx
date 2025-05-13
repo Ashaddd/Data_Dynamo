@@ -53,7 +53,16 @@ export default function LoginForm() {
         title: "Login Successful",
         description: result.message || `Welcome back, ${result.user.email}!`,
       });
-      authLogin(result.user.email); // Use mock auth context to set user
+      // Auth context login expects: email, name, userType, year, major
+      // The handleLogin server action should ideally return all these from DB.
+      // For now, using the mock structure returned by handleLogin.
+      authLogin(
+        result.user.email, 
+        result.user.name, // Name from mockUser in handleLogin
+        result.user.userType, // userType from mockUser
+        result.user.year, // year (grad or expected) from mockUser
+        result.user.major // major from mockUser
+      ); 
       router.push(redirectUrl);
     } else {
       toast({
@@ -69,7 +78,7 @@ export default function LoginForm() {
     <Card className="w-full max-w-md mx-auto shadow-xl">
       <CardHeader>
         <CardTitle className="text-2xl">Welcome Back!</CardTitle>
-        <CardDescription>Log in to access your Nexus Alumni dashboard.</CardDescription>
+        <CardDescription>Log in to access your Nexus dashboard.</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>

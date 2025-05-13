@@ -8,8 +8,8 @@ import Link from "next/link";
 const features = [
   {
     icon: <Users className="h-8 w-8 text-primary" />,
-    title: "Alumni Profiles",
-    description: "Register and manage your profile, share your journey, and connect with peers."
+    title: "Profiles for All",
+    description: "Students and alumni can register, manage profiles, share journeys, and connect."
   },
   {
     icon: <Award className="h-8 w-8 text-primary" />,
@@ -19,17 +19,17 @@ const features = [
   {
     icon: <CalendarCheck className="h-8 w-8 text-primary" />,
     title: "Events & News",
-    description: "Stay updated with the latest college events, alumni meetups, and news."
+    description: "Stay updated with the latest college events, alumni meetups, and news relevant to all."
   },
   {
     icon: <Handshake className="h-8 w-8 text-primary" />,
     title: "Mentorship Hub",
-    description: "Find or become a mentor, share knowledge, and foster growth within the network."
+    description: "Students can find mentors, and alumni can offer guidance, fostering growth within the network."
   },
   {
     icon: <Lightbulb className="h-8 w-8 text-primary" />,
     title: "AI Mentor Matching",
-    description: "Intelligently connect with alumni mentors based on your career interests and their expertise."
+    description: "Students can intelligently connect with alumni mentors based on career interests and expertise."
   },
 ];
 
@@ -45,14 +45,14 @@ export default function HomePage() {
               Welcome to {SITE_NAME}
             </h1>
             <p className="max-w-2xl text-lg text-muted-foreground md:text-xl">
-              {SITE_DESCRIPTION} Reconnect, share, and grow with your alma mater.
+              {SITE_DESCRIPTION} For students and alumni to reconnect, share, and grow with your alma mater.
             </p>
             <div className="flex flex-col sm:flex-row gap-4">
               <Button size="lg" asChild>
                 <Link href="/register">Join the Network</Link>
               </Button>
               <Button size="lg" variant="outline" asChild>
-                <Link href="/login">Alumni Login</Link>
+                <Link href="/login">Member Login</Link>
               </Button>
             </div>
           </div>
@@ -85,10 +85,10 @@ export default function HomePage() {
       <section className="w-full py-12 md:py-24 lg:py-32 bg-muted/50">
         <div className="container mx-auto max-w-7xl px-4 md:px-6 text-center">
           <h2 className="text-3xl font-bold tracking-tight sm:text-4xl text-foreground">
-            Ready to Reconnect?
+            Ready to Connect?
           </h2>
           <p className="mt-4 max-w-xl mx-auto text-lg text-muted-foreground">
-            Become an active member of the {SITE_NAME} community today. Share your experiences, mentor current students, and stay informed.
+            Become an active member of the {SITE_NAME} community today. Whether you're a student or an alumnus, share your experiences, find or offer mentorship, and stay informed.
           </p>
           <div className="mt-8">
             <Button size="lg" asChild>
