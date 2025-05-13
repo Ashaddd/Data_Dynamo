@@ -6,6 +6,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { db } from '@/lib/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import type { Alumni } from '@/lib/types';
+import { mockAlumni } from '@/data/alumni'; // Import mock alumni data
 
 export const metadata: Metadata = {
   title: 'Notable Alumni',
@@ -20,27 +21,29 @@ async function getNotableAlumniByDepartments(departmentValues: string[]): Promis
   }
   try {
     const usersCollection = collection(db, 'users');
+    // FirebaseError: [code=invalid-argument]: A maximum of 10 'in' filter value comparisons are allowed in a single query.
+    // If departmentValues grows beyond 10, this query will fail.
+    // For 3 target departments, this is fine.
     const q = query(
       usersCollection,
       where('userType', '==', 'alumni'),
       where('isNotable', '==', true),
-      where('major', 'in', departmentValues)
+      where('major', 'in', departmentValues) 
     );
     const querySnapshot = await getDocs(q);
     const alumni = querySnapshot.docs.map(doc => {
       const data = doc.data();
-      // Ensure graduationYear is a number if it exists
       const graduationYear = data.graduationYear ? Number(data.graduationYear) : undefined;
       return {
         id: doc.id,
         ...data,
-        graduationYear, // Override with potentially converted number
+        graduationYear,
       } as Alumni;
     });
     return alumni;
   } catch (error) {
-    console.error("Error fetching notable alumni:", error);
-    return []; // Return empty array on error
+    console.error("Error fetching notable alumni from Firestore:", error);
+    return []; 
   }
 }
 
@@ -67,7 +70,19 @@ export default async function NotableAlumniPage() {
     );
   }
 
-  const allNotableAlumniInTargetDepts = await getNotableAlumniByDepartments(TARGET_DEPARTMENT_VALUES);
+  const firestoreNotableAlumni = await getNotableAlumniByDepartments(TARGET_DEPARTMENT_VALUES);
+
+  // Prepare mock notable alumni for target departments as a fallback
+  const mockNotableAlumniForTargetDepartments = mockAlumni.filter(alum => 
+    TARGET_DEPARTMENT_VALUES.includes(alum.major) && alum.isNotable
+  );
+
+  // Determine if there's any data to show (either from Firestore or mock)
+  const hasAnyDataToShow = targetDepartments.some(department => {
+    const firestoreDataForDept = firestoreNotableAlumni.filter(alum => alum.major === department.value);
+    const mockDataForDept = mockNotableAlumniForTargetDepartments.filter(alum => alum.major === department.value);
+    return firestoreDataForDept.length > 0 || mockDataForDept.length > 0;
+  });
 
   return (
     <div className="space-y-8">
@@ -80,7 +95,7 @@ export default async function NotableAlumniPage() {
         </CardHeader>
       </Card>
 
-      {allNotableAlumniInTargetDepts.length > 0 ? (
+      {hasAnyDataToShow ? (
         <Tabs defaultValue={targetDepartments[0].value} className="w-full">
           <TabsList className="grid w-full grid-cols-1 sm:grid-cols-3 mb-6">
             {targetDepartments.map((department) => (
@@ -91,14 +106,21 @@ export default async function NotableAlumniPage() {
           </TabsList>
 
           {targetDepartments.map((department) => {
-            const notableAlumniInDept = allNotableAlumniInTargetDepts.filter(
+            let alumniForTab = firestoreNotableAlumni.filter(
               (alum) => alum.major === department.value
             );
 
+            // If no Firestore data for this department, use mock data as fallback
+            if (alumniForTab.length === 0) {
+              alumniForTab = mockNotableAlumniForTargetDepartments.filter(
+                (alum) => alum.major === department.value
+              );
+            }
+
             return (
               <TabsContent key={department.value} value={department.value} className="space-y-6">
-                {notableAlumniInDept.length > 0 ? (
-                  <NotableAlumniList alumni={notableAlumniInDept} />
+                {alumniForTab.length > 0 ? (
+                  <NotableAlumniList alumni={alumniForTab} />
                 ) : (
                   <p className="text-center text-muted-foreground py-10 text-lg">
                     No notable alumni found in {department.label}.
@@ -110,7 +132,7 @@ export default async function NotableAlumniPage() {
         </Tabs>
       ) : (
         <p className="text-center text-muted-foreground py-10 text-lg">
-          No notable alumni to display in Computer Science, Electrical Engineering, or Civil Engineering at this time. Check back later as our network grows!
+          No notable alumni to display in the configured departments at this time. Check back later as our network grows!
         </p>
       )}
     </div>
