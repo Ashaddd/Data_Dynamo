@@ -10,9 +10,7 @@ export default function Footer() {
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           <div>
             <AppLogo iconSize={24} textSize="text-xl" />
-            <p className="mt-2 text-sm text-muted-foreground">
-              Fostering connections, building futures.
-            </p>
+            {/* Tagline was here, now moved to the bottom centered section */}
             <div className="mt-4 flex space-x-4">
               <Link href="#" className="text-muted-foreground hover:text-primary">
                 <Github size={20} />
@@ -48,6 +46,9 @@ export default function Footer() {
           </div>
         </div>
         <div className="mt-8 border-t border-border pt-8 text-center">
+          <p className="text-sm text-muted-foreground mb-2">
+            Fostering connections, building futures.
+          </p>
           <p className="text-sm text-muted-foreground">
             &copy; {new Date().getFullYear()} {SITE_NAME}. All rights reserved.
           </p>
@@ -56,3 +57,4 @@ export default function Footer() {
     </footer>
   );
 }
+
