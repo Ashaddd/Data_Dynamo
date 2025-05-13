@@ -1,4 +1,3 @@
-
 "use client";
 
 import { Button } from "@/components/ui/button";
@@ -12,27 +11,32 @@ const features = [
   {
     icon: <Users className="h-8 w-8 text-primary" />,
     title: "Profiles for All",
-    description: "Students and alumni can register, manage profiles, share journeys, and connect."
+    description: "Students and alumni can register, manage profiles, share journeys, and connect.",
+    href: "/register" // Example link, adjust as needed
   },
   {
     icon: <Award className="h-8 w-8 text-primary" />,
     title: "Notable Alumni",
-    description: "Discover and celebrate the achievements of distinguished alumni from our community."
+    description: "Discover and celebrate the achievements of distinguished alumni from our community.",
+    href: "/dashboard/notable-alumni"
   },
   {
     icon: <CalendarCheck className="h-8 w-8 text-primary" />,
     title: "Events & News",
-    description: "Stay updated with the latest college events, alumni meetups, and news relevant to all."
+    description: "Stay updated with the latest college events, alumni meetups, and news relevant to all.",
+    href: "/dashboard/events"
   },
   {
     icon: <Handshake className="h-8 w-8 text-primary" />,
     title: "Mentorship Hub",
-    description: "Students can find mentors, and alumni can offer guidance, fostering growth within the network."
+    description: "Students can find mentors, and alumni can offer guidance, fostering growth within the network.",
+    href: "/dashboard/mentorship/search"
   },
   {
     icon: <Lightbulb className="h-8 w-8 text-primary" />,
     title: "AI Mentor Matching",
-    description: "Students can intelligently connect with alumni mentors based on career interests and expertise."
+    description: "Students can intelligently connect with alumni mentors based on career interests and expertise.",
+    href: "/dashboard/mentorship/match"
   },
 ];
 
@@ -128,15 +132,19 @@ export default function PublicHomePageContent() {
           </h2>
           <div className="grid grid-cols-1 gap-8 md:grid-cols-2 lg:grid-cols-3">
             {features.map((feature) => (
-              <Card key={feature.title} className="shadow-lg hover:shadow-xl transition-shadow duration-300">
-                <CardHeader className="items-center text-center">
-                  {feature.icon}
-                  <CardTitle className="mt-4 text-xl">{feature.title}</CardTitle>
-                </CardHeader>
-                <CardContent className="text-center">
-                  <CardDescription>{feature.description}</CardDescription>
-                </CardContent>
-              </Card>
+              <Link href={feature.href} key={feature.title} legacyBehavior>
+                <a className="block h-full">
+                  <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 h-full flex flex-col">
+                    <CardHeader className="items-center text-center">
+                      {feature.icon}
+                      <CardTitle className="mt-4 text-xl">{feature.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="text-center flex-grow">
+                      <CardDescription>{feature.description}</CardDescription>
+                    </CardContent>
+                  </Card>
+                </a>
+              </Link>
             ))}
           </div>
         </div>
@@ -178,4 +186,3 @@ export default function PublicHomePageContent() {
     </div>
   );
 }
-
