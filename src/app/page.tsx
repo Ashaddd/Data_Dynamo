@@ -1,7 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SITE_DESCRIPTION, SITE_NAME } from "@/lib/constants";
-import { Award, CalendarCheck, Handshake, Lightbulb, Users, GraduationCap } from "lucide-react";
+import { Award, CalendarCheck, Handshake, Lightbulb, Users, GraduationCap, Cpu, Zap, Building } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 
@@ -33,6 +33,27 @@ const features = [
   },
 ];
 
+const departmentShowcase = [
+  {
+    icon: <Cpu size={48} className="text-primary mb-2" />,
+    title: "Computer Science",
+    description: "Innovators, developers, and leaders in the world of computing and technology.",
+    href: "/dashboard/notable-alumni", // Users can select CS tab on the page
+  },
+  {
+    icon: <Zap size={48} className="text-primary mb-2" />,
+    title: "Electrical Engineering",
+    description: "Pioneers in electronics, power systems, and telecommunications.",
+    href: "/dashboard/notable-alumni", // Users can select EE tab
+  },
+  {
+    icon: <Building size={48} className="text-primary mb-2" />,
+    title: "Civil Engineering",
+    description: "Builders of infrastructure, shaping our environment and modern society.",
+    href: "/dashboard/notable-alumni", // Users can select Civil Eng tab
+  },
+];
+
 export default function HomePage() {
   return (
     <div className="flex flex-col items-center">
@@ -55,6 +76,32 @@ export default function HomePage() {
                 <Link href="/login">Member Login</Link>
               </Button>
             </div>
+          </div>
+        </div>
+
+        {/* Department Showcase Section */}
+        <div className="container mx-auto max-w-5xl px-4 md:px-6 mt-16 lg:mt-20">
+          <h2 className="text-3xl font-bold tracking-tight text-center sm:text-4xl text-foreground mb-10">
+            Explore Our Alumni Network
+          </h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+            {departmentShowcase.map((dept) => (
+              <Link href={dept.href} key={dept.title} legacyBehavior>
+                <a className="block h-full">
+                  <Card className="shadow-lg hover:shadow-xl transition-shadow duration-300 h-full flex flex-col text-center items-center p-6">
+                    <CardHeader className="p-0 mb-4"> {/* Adjusted padding and margin */}
+                      {dept.icon}
+                      <CardTitle className="text-xl mt-2">{dept.title}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="p-0">
+                      <p className="text-sm text-muted-foreground">
+                        {dept.description}
+                      </p>
+                    </CardContent>
+                  </Card>
+                </a>
+              </Link>
+            ))}
           </div>
         </div>
       </section>
