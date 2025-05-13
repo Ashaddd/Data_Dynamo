@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SITE_DESCRIPTION, SITE_NAME } from "@/lib/constants";
@@ -70,23 +71,8 @@ export default function HomePage() {
             </p>
             
             {/* New Student/Alumni Sections replacing old buttons */}
-            <div className="mt-10 grid w-full max-w-3xl gap-8 md:grid-cols-2">
-              <Card className="shadow-lg">
-                <CardHeader className="items-center">
-                  <CardTitle className="text-2xl text-primary">For Students</CardTitle>
-                  <CardDescription>Connect with mentors and explore opportunities.</CardDescription>
-                </CardHeader>
-                <CardContent className="flex flex-col gap-3">
-                  <Button size="lg" asChild className="w-full">
-                    <Link href="/login?userType=student">Student Login</Link>
-                  </Button>
-                  <Button size="lg" variant="outline" asChild className="w-full">
-                    <Link href="/register?userType=student">Student Registration</Link>
-                  </Button>
-                </CardContent>
-              </Card>
-
-              <Card className="shadow-lg">
+            <div className="mt-10 grid w-full max-w-3xl gap-8 md:grid-cols-1 justify-center"> {/* Adjusted to md:grid-cols-1 and justify-center */}
+              <Card className="shadow-lg md:max-w-md"> {/* Added md:max-w-md to constrain width on larger screens */}
                 <CardHeader className="items-center">
                   <CardTitle className="text-2xl text-primary">For Alumni</CardTitle>
                   <CardDescription>Offer mentorship and reconnect with peers.</CardDescription>
