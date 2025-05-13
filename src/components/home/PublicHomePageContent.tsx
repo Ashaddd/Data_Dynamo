@@ -75,12 +75,7 @@ export default function PublicHomePageContent() {
             </p>
             {!loading && !user && (
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8">
-                <Button size="lg" asChild>
-                  <Link href="/register?userType=student" className="flex items-center">
-                    <UserPlus className="mr-2 h-5 w-5" /> Student Signup
-                  </Link>
-                </Button>
-                 {/* Alumni signup button removed as requested */}
+                 {/* Student signup button removed as requested */}
               </div>
             )}
           </div>
