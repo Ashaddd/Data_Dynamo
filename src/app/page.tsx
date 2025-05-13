@@ -70,23 +70,8 @@ export default function HomePage() {
               {SITE_DESCRIPTION} For students and alumni to reconnect, share, and grow with your alma mater.
             </p>
             
-            {/* New Student/Alumni Sections replacing old buttons */}
-            <div className="mt-10 grid w-full max-w-3xl gap-8 md:grid-cols-1 justify-center"> {/* Adjusted to md:grid-cols-1 and justify-center */}
-              <Card className="shadow-lg md:max-w-md"> {/* Added md:max-w-md to constrain width on larger screens */}
-                <CardHeader className="items-center">
-                  <CardTitle className="text-2xl text-primary">For Alumni</CardTitle>
-                  <CardDescription>Offer mentorship and reconnect with peers.</CardDescription>
-                </CardHeader>
-                <CardContent className="flex flex-col gap-3">
-                  <Button size="lg" asChild className="w-full">
-                    <Link href="/login?userType=alumni">Alumni Login</Link>
-                  </Button>
-                  <Button size="lg" variant="outline" asChild className="w-full">
-                    <Link href="/register?userType=alumni">Alumni Registration</Link>
-                  </Button>
-                </CardContent>
-              </Card>
-            </div>
+            {/* Login/Registration cards were here, now removed based on user request history */}
+
           </div>
         </div>
 
