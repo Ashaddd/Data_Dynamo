@@ -1,10 +1,12 @@
+
 "use server";
 
 import { z } from "zod";
 import { mentorMatch } from "@/ai/flows/mentor-matcher";
 import type { MentorMatchInput, MentorMatchOutput } from "@/ai/flows/mentor-matcher";
 import { MOCK_ALUMNI_PROFILES_FOR_AI } from "./constants"; // Using mock data for alumni profiles
-import type { RegistrationFormData as RegistrationFormDataType, ProfileFormData as ProfileFormDataType } from "./types"; // Renamed to avoid conflict
+import type { RegistrationFormData as RegistrationFormDataType, ProfileFormData as ProfileFormDataType, Alumni } from "./types"; // Renamed to avoid conflict
+import { mockAlumni } from "@/data/alumni"; // Import the mockAlumni array
 
 // Schema for AI Mentor Match form
 const AiMentorMatchFormSchema = z.object({
@@ -81,12 +83,40 @@ export async function handleRegistration(prevState: any, formData: RegistrationF
       errors: validatedFields.error.errors,
     };
   }
-  // In a real app, you would save this to a database and handle authentication.
-  // For this mock, we'll just log it.
-  console.log("Registration Data:", validatedFields.data);
+  
+  const data = validatedFields.data;
+  console.log("Registration Data:", data);
+
+  if (data.userType === 'alumni' && data.graduationYear) {
+    const newAlumnus: Alumni = {
+      id: Date.now().toString(), // Simple ID generation
+      name: data.name,
+      email: data.email,
+      userType: 'alumni',
+      graduationYear: parseInt(data.graduationYear),
+      major: data.major,
+      currentRole: data.currentRole || undefined,
+      company: data.company || undefined,
+      industry: undefined, // Not collected at registration, can be added via profile
+      skills: [], // Not collected at registration
+      interests: [], // Not collected at registration
+      linkedinProfile: data.linkedinProfile || undefined,
+      bio: undefined, // Not collected at registration
+      achievements: undefined, // Not collected at registration
+      profilePictureUrl: `https://api.dicebear.com/8.x/initials/svg?seed=${encodeURIComponent(data.name)}`, // Default avatar
+      isNotable: true, // Set to true for demo purposes to appear on Notable Alumni page
+      willingToMentor: data.willingToMentor ?? false,
+      contactInfo: data.email, // Use email as contact info
+    };
+    // This attempts to modify the in-memory array.
+    // Note: This modification might not persist reliably across all server environments or restarts.
+    // It's for demonstration in a development context.
+    mockAlumni.push(newAlumnus);
+    console.log(`New alumnus ${newAlumnus.name} added to mockAlumni. Total: ${mockAlumni.length}`);
+  }
   
   // Simulate success
-  return { message: `Successfully registered ${validatedFields.data.name}! You can now log in.` };
+  return { message: `Successfully registered ${data.name}! You can now log in.` };
 }
 
 // Schema for Login Form
@@ -111,17 +141,31 @@ export async function handleLogin(prevState: any, formData: FormData): Promise<{
   console.log("Login Attempt:", validatedFields.data);
 
   // Simulate fetching user data - replace with actual DB lookup
-  // For mock purposes, we'll just assume a user type and year if login is successful
-  // This part would need to fetch the actual user data from your storage/DB
-  const mockUser = {
-    email: validatedFields.data.email,
-    name: "Mock User", // Fetched from DB
-    userType: (Math.random() > 0.5 ? 'alumni' : 'student') as 'student' | 'alumni', // Fetched from DB
-    year: "2022", // Fetched graduationYear or expectedGraduationYear from DB
-    major: "Computer Science" // Fetched from DB
-  };
+  // Try to find user in the potentially updated mockAlumni list
+  const existingAlumni = mockAlumni.find(alum => alum.email === validatedFields.data.email && alum.userType === 'alumni');
+  
+  let userToReturn;
+  if (existingAlumni) {
+    userToReturn = {
+        email: existingAlumni.email,
+        name: existingAlumni.name,
+        userType: 'alumni' as 'alumni',
+        year: existingAlumni.graduationYear.toString(),
+        major: existingAlumni.major
+    };
+  } else {
+    // Fallback to generic mock user if not found in mockAlumni or if student
+     userToReturn = {
+        email: validatedFields.data.email,
+        name: "Mock User", 
+        userType: (Math.random() > 0.5 ? 'alumni' : 'student') as 'student' | 'alumni', 
+        year: "2022", 
+        major: "Computer Science" 
+    };
+  }
 
-  return { message: "Login successful!", user: mockUser };
+
+  return { message: "Login successful!", user: userToReturn };
 }
 
 
@@ -199,8 +243,34 @@ export async function handleProfileUpdate(prevState: any, formData: FormData): P
       errors: validatedFields.error.errors,
     };
   }
-  // In a real app, save to database.
-  console.log("Profile Update Data:", validatedFields.data);
+  
+  const updatedData = validatedFields.data;
+  console.log("Profile Update Data:", updatedData);
+
+  // If alumni, try to update their entry in mockAlumni
+  if (updatedData.userType === 'alumni') {
+    const alumniIndex = mockAlumni.findIndex(a => a.email === updatedData.email);
+    if (alumniIndex !== -1) {
+        mockAlumni[alumniIndex] = {
+            ...mockAlumni[alumniIndex], // Keep existing fields like ID, isNotable etc.
+            name: updatedData.name,
+            graduationYear: updatedData.graduationYear ? parseInt(updatedData.graduationYear) : mockAlumni[alumniIndex].graduationYear,
+            major: updatedData.major,
+            currentRole: updatedData.currentRole || undefined,
+            company: updatedData.company || undefined,
+            industry: updatedData.industry || undefined,
+            skills: updatedData.skills || [],
+            interests: updatedData.interests || [],
+            linkedinProfile: updatedData.linkedinProfile || undefined,
+            bio: updatedData.bio || undefined,
+            achievements: updatedData.achievements || undefined,
+            willingToMentor: updatedData.willingToMentor,
+            // profilePictureUrl might be updated elsewhere or kept
+        };
+        console.log(`Alumnus ${updatedData.name} profile updated in mockAlumni.`);
+    }
+  }
   
   return { message: "Profile updated successfully!" };
 }
+
