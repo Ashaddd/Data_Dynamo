@@ -6,16 +6,17 @@ import AlumniCard from './AlumniCard';
 import { Input } from '@/components/ui/input';
 import { useState } from 'react';
 import { Search } from 'lucide-react';
+import AlumniDetailModal from './AlumniDetailModal'; // Import the new modal component
 
 interface NotableAlumniListProps {
-  alumni: Alumni[]; // Expects a list of alumni, pre-filtered for notability and department by parent
+  alumni: Alumni[];
 }
 
 export default function NotableAlumniList({ alumni }: NotableAlumniListProps) {
   const [searchTerm, setSearchTerm] = useState('');
+  const [selectedAlumni, setSelectedAlumni] = useState<Alumni | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
 
-  // The 'alumni' prop is already filtered by the parent page for notability and department.
-  // This search filters within that specific department's notable alumni list.
   const filteredAlumni = alumni.filter(
     (alum) =>
       alum.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
@@ -24,6 +25,16 @@ export default function NotableAlumniList({ alumni }: NotableAlumniListProps) {
       (alum.currentRole && alum.currentRole.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (alum.skills && alum.skills.some(skill => skill.toLowerCase().includes(searchTerm.toLowerCase())))
   );
+
+  const handleAlumniCardClick = (alum: Alumni) => {
+    setSelectedAlumni(alum);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedAlumni(null);
+  };
 
   return (
     <div className="space-y-6">
@@ -40,13 +51,21 @@ export default function NotableAlumniList({ alumni }: NotableAlumniListProps) {
       {filteredAlumni.length > 0 ? (
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
           {filteredAlumni.map((alum) => (
-            <AlumniCard key={alum.id} alumni={alum} />
+            <AlumniCard key={alum.id} alumni={alum} onClick={() => handleAlumniCardClick(alum)} />
           ))}
         </div>
       ) : (
         <p className="text-center text-muted-foreground py-8">
           No notable alumni found matching your search criteria in this section.
         </p>
+      )}
+
+      {selectedAlumni && (
+        <AlumniDetailModal
+          alumni={selectedAlumni}
+          isOpen={isModalOpen}
+          onClose={handleCloseModal}
+        />
       )}
     </div>
   );

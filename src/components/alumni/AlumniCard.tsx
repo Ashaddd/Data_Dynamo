@@ -3,20 +3,26 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Briefcase, GraduationCap, Linkedin, Star, UserCheck, ExternalLink } from 'lucide-react';
+import { Briefcase, GraduationCap, Linkedin, Star, UserCheck, ExternalLink, Eye } from 'lucide-react';
 import Link from 'next/link';
 
 interface AlumniCardProps {
   alumni: Alumni;
+  onClick?: () => void; // Add onClick prop
 }
 
 const getInitials = (name: string) => {
   return name.split(' ').map(n => n[0]).join('').toUpperCase();
 };
 
-export default function AlumniCard({ alumni }: AlumniCardProps) {
+export default function AlumniCard({ alumni, onClick }: AlumniCardProps) {
   return (
-    <Card className="flex flex-col h-full shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden">
+    <Card 
+      className="flex flex-col h-full shadow-lg hover:shadow-xl transition-shadow duration-300 overflow-hidden cursor-pointer group"
+      onClick={onClick} // Make the entire card clickable
+      tabIndex={0} // Make it focusable
+      onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') onClick?.(); }} // Keyboard accessibility
+    >
       <CardHeader className="bg-muted/30 p-4">
         <div className="flex items-start gap-4">
           <Avatar className="h-20 w-20 border-2 border-primary">
@@ -24,7 +30,7 @@ export default function AlumniCard({ alumni }: AlumniCardProps) {
             <AvatarFallback>{getInitials(alumni.name)}</AvatarFallback>
           </Avatar>
           <div className="flex-1">
-            <CardTitle className="text-xl mb-1">{alumni.name}</CardTitle>
+            <CardTitle className="text-xl mb-1 group-hover:text-primary transition-colors">{alumni.name}</CardTitle>
             <CardDescription className="text-sm text-primary font-medium flex items-center gap-1">
               <Briefcase size={14} /> {alumni.currentRole || 'Role not specified'}
             </CardDescription>
@@ -56,21 +62,9 @@ export default function AlumniCard({ alumni }: AlumniCardProps) {
         )}
       </CardContent>
       <CardFooter className="p-4 border-t bg-muted/30 flex flex-col sm:flex-row justify-between items-center gap-2">
-        <div className="flex items-center gap-2">
-          {alumni.linkedinProfile && (
-            <Button variant="outline" size="sm" asChild>
-              <Link href={alumni.linkedinProfile} target="_blank" rel="noopener noreferrer">
-                <Linkedin size={16} className="mr-1" /> LinkedIn
-              </Link>
-            </Button>
-          )}
-           {/* A generic "View Profile" button, could link to a detailed alumni profile page */}
-           {/* <Button variant="default" size="sm" asChild>
-              <Link href={`/alumni/${alumni.id}`}> 
-                <ExternalLink size={16} className="mr-1" /> View Profile
-              </Link>
-            </Button> */}
-        </div>
+        <Button variant="ghost" size="sm" className="w-full sm:w-auto group-hover:bg-primary/10" onClick={(e) => { e.stopPropagation(); onClick?.(); }}>
+            <Eye size={16} className="mr-1" /> View Details
+        </Button>
          {alumni.willingToMentor && (
           <Badge variant="default" className="bg-green-600 hover:bg-green-700 text-white">
             <UserCheck size={14} className="mr-1" /> Willing to Mentor
