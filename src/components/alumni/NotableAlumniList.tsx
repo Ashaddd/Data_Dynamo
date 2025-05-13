@@ -1,3 +1,4 @@
+// src/components/alumni/NotableAlumniList.tsx
 "use client";
 
 import type { Alumni } from '@/lib/types';
@@ -7,19 +8,21 @@ import { useState } from 'react';
 import { Search } from 'lucide-react';
 
 interface NotableAlumniListProps {
-  alumni: Alumni[];
+  alumni: Alumni[]; // Expects a list of alumni, pre-filtered for notability and department by parent
 }
 
 export default function NotableAlumniList({ alumni }: NotableAlumniListProps) {
   const [searchTerm, setSearchTerm] = useState('');
-  const notableAlumni = alumni.filter(a => a.isNotable);
 
-  const filteredAlumni = notableAlumni.filter(
+  // The 'alumni' prop is already filtered by the parent page for notability and department.
+  // This search filters within that specific department's notable alumni list.
+  const filteredAlumni = alumni.filter(
     (alum) =>
       alum.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      (alum.major && alum.major.toLowerCase().includes(searchTerm.toLowerCase())) ||
       (alum.industry && alum.industry.toLowerCase().includes(searchTerm.toLowerCase())) ||
-      (alum.company && alum.company.toLowerCase().includes(searchTerm.toLowerCase()))
+      (alum.company && alum.company.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (alum.currentRole && alum.currentRole.toLowerCase().includes(searchTerm.toLowerCase())) ||
+      (alum.skills && alum.skills.some(skill => skill.toLowerCase().includes(searchTerm.toLowerCase())))
   );
 
   return (
@@ -28,7 +31,7 @@ export default function NotableAlumniList({ alumni }: NotableAlumniListProps) {
         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
         <Input
           type="search"
-          placeholder="Search notable alumni by name, major, industry..."
+          placeholder="Search by name, role, company, industry, skills..."
           className="w-full pl-10 shadow-sm"
           value={searchTerm}
           onChange={(e) => setSearchTerm(e.target.value)}
@@ -42,7 +45,7 @@ export default function NotableAlumniList({ alumni }: NotableAlumniListProps) {
         </div>
       ) : (
         <p className="text-center text-muted-foreground py-8">
-          No notable alumni found matching your search criteria.
+          No notable alumni found matching your search criteria in this section.
         </p>
       )}
     </div>
