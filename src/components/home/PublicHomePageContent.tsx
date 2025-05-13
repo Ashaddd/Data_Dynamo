@@ -80,11 +80,7 @@ export default function PublicHomePageContent() {
                     <UserPlus className="mr-2 h-5 w-5" /> Student Signup
                   </Link>
                 </Button>
-                <Button size="lg" variant="outline" asChild>
-                  <Link href="/register?userType=alumni" className="flex items-center">
-                    <GraduationCap className="mr-2 h-5 w-5" /> Alumni Signup
-                  </Link>
-                </Button>
+                 {/* Alumni signup button removed as requested */}
               </div>
             )}
           </div>
@@ -175,3 +171,4 @@ export default function PublicHomePageContent() {
     </div>
   );
 }
+
