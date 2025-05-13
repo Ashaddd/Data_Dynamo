@@ -1,4 +1,4 @@
-tsx
+
 import type { AppNotification } from '@/lib/types';
 
 export const mockNotifications: AppNotification[] = [
