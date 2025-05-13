@@ -13,10 +13,11 @@ import {
   FormItem,
   FormLabel,
   FormMessage,
+  FormDescription, // Added FormDescription
 } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription as ShadCnCardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/hooks/use-auth";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter, useSearchParams } from "next/navigation"; 
@@ -155,7 +156,7 @@ export default function RegistrationForm() {
     <Card className="w-full max-w-lg mx-auto shadow-xl">
       <CardHeader>
         <CardTitle className="text-2xl">Create your Account</CardTitle>
-        <CardDescription>Join the {userType === 'student' ? 'Student' : userType === 'alumni' ? 'Alumni' : ''} Network to connect and grow.</CardDescription>
+        <ShadCnCardDescription>Join the {userType === 'student' ? 'Student' : userType === 'alumni' ? 'Alumni' : ''} Network to connect and grow.</ShadCnCardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -395,3 +396,4 @@ export default function RegistrationForm() {
     </Card>
   );
 }
+
