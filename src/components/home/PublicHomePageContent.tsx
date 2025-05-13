@@ -1,18 +1,28 @@
+
 "use client";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SITE_DESCRIPTION, SITE_NAME } from "@/lib/constants";
-import { Award, CalendarCheck, Handshake, Lightbulb, Users, GraduationCap, Cpu, Zap, SlidersHorizontal, Cog, Briefcase as BriefcaseIcon, LogIn, UserPlus } from "lucide-react"; // Renamed Briefcase to BriefcaseIcon to avoid conflict
+import { Award, CalendarCheck, Handshake, Lightbulb, Users, GraduationCap, Cpu, Zap, SlidersHorizontal, Cog, Briefcase as BriefcaseIcon, LogIn, UserPlus, ArrowLeft, ArrowRight } from "lucide-react"; // Renamed Briefcase to BriefcaseIcon to avoid conflict
 import Link from "next/link";
 import { useAuth } from "@/hooks/use-auth";
+import Image from 'next/image';
+import { mockAlumni } from '@/data/alumni';
+import {
+  Carousel,
+  CarouselContent,
+  CarouselItem,
+  CarouselNext,
+  CarouselPrevious,
+} from "@/components/ui/carousel"; // Import the new Carousel component
 
 const features = [
   {
     icon: <Users className="h-8 w-8 text-primary" />,
     title: "Profiles for All",
     description: "Students and alumni can register, manage profiles, share journeys, and connect.",
-    href: "/register" // Example link, adjust as needed
+    href: "/register" 
   },
   {
     icon: <Award className="h-8 w-8 text-primary" />,
@@ -69,12 +79,13 @@ const departmentShowcase = [
     icon: <BriefcaseIcon size={48} className="text-primary mb-2" />,
     title: "Business Administration",
     description: "Leaders and strategists in commerce, management, and organizational success.",
-    href: "/dashboard/notable-alumni", // Or a specific page for business alumni
+    href: "/dashboard/notable-alumni",
   },
 ];
 
 export default function PublicHomePageContent() {
   const { user, loading } = useAuth();
+  const notableAlumniForSlider = mockAlumni.filter(alumni => alumni.isNotable && alumni.profilePictureUrl).slice(0, 5); // Take first 5 notable for slider
 
   return (
     <div className="flex flex-col items-center">
@@ -91,18 +102,64 @@ export default function PublicHomePageContent() {
             </p>
             {!loading && !user && (
               <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mt-8">
-                 {/* Student signup button removed as requested */}
+                 {/* Signup buttons removed as per previous requests */}
               </div>
             )}
           </div>
         </div>
+
+        {/* Notable Alumni Slider Section */}
+        {notableAlumniForSlider.length > 0 && (
+          <div className="container mx-auto max-w-5xl px-4 md:px-6 mt-12 lg:mt-16">
+            <h2 className="text-3xl font-bold tracking-tight text-center sm:text-4xl text-foreground mb-10">
+              Meet Our Notable Alumni
+            </h2>
+            <Carousel
+              opts={{
+                align: "start",
+                loop: true,
+              }}
+              className="w-full"
+            >
+              <CarouselContent>
+                {notableAlumniForSlider.map((alumni) => (
+                  <CarouselItem key={alumni.id} className="md:basis-1/2 lg:basis-1/3">
+                    <div className="p-1">
+                      <Card className="shadow-lg overflow-hidden h-full">
+                        <CardContent className="flex flex-col items-center justify-center p-0 aspect-[3/4] relative">
+                          {alumni.profilePictureUrl && (
+                             <Image
+                              src={alumni.profilePictureUrl}
+                              alt={`Portrait of ${alumni.name}`}
+                              layout="fill"
+                              objectFit="cover"
+                              data-ai-hint="alumni portrait"
+                              className="transition-transform duration-300 group-hover:scale-105"
+                            />
+                          )}
+                           <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent p-4 flex flex-col justify-end">
+                              <h3 className="text-xl font-semibold text-white">{alumni.name}</h3>
+                              <p className="text-sm text-primary-foreground/80">{alumni.currentRole || alumni.major}</p>
+                            </div>
+                        </CardContent>
+                      </Card>
+                    </div>
+                  </CarouselItem>
+                ))}
+              </CarouselContent>
+              <CarouselPrevious />
+              <CarouselNext />
+            </Carousel>
+          </div>
+        )}
+
 
         {/* Department Showcase Section */}
         <div className="container mx-auto max-w-5xl px-4 md:px-6 mt-16 lg:mt-20">
           <h2 className="text-3xl font-bold tracking-tight text-center sm:text-4xl text-foreground mb-10">
             Explore Our Alumni Network
           </h2>
-          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6"> {/* Adjusted grid for more items */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
             {departmentShowcase.map((dept) => (
               <Link href={dept.href} key={dept.title} legacyBehavior>
                 <a className="block h-full">
@@ -186,3 +243,4 @@ export default function PublicHomePageContent() {
     </div>
   );
 }
+
