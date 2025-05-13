@@ -1,10 +1,13 @@
 
+"use client"; // Add "use client" to use hooks
+
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { SITE_DESCRIPTION, SITE_NAME } from "@/lib/constants";
 import { Award, CalendarCheck, Handshake, Lightbulb, Users, GraduationCap, Cpu, Zap, Building } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
+import { useAuth } from "@/hooks/use-auth"; // Import useAuth
 
 const features = [
   {
@@ -56,6 +59,8 @@ const departmentShowcase = [
 ];
 
 export default function HomePage() {
+  const { user, loading } = useAuth(); // Get user and loading state
+
   return (
     <div className="flex flex-col items-center">
       {/* Hero Section */}
@@ -69,9 +74,6 @@ export default function HomePage() {
             <p className="max-w-2xl text-lg text-muted-foreground md:text-xl">
               {SITE_DESCRIPTION} For students and alumni to reconnect, share, and grow with your alma mater.
             </p>
-            
-            {/* Login/Registration cards were here, now removed based on user request history */}
-
           </div>
         </div>
 
@@ -124,22 +126,24 @@ export default function HomePage() {
         </div>
       </section>
 
-      {/* Call to Action Section */}
-      <section className="w-full py-12 md:py-24 lg:py-32 bg-muted/50">
-        <div className="container mx-auto max-w-7xl px-4 md:px-6 text-center">
-          <h2 className="text-3xl font-bold tracking-tight sm:text-4xl text-foreground">
-            Ready to Connect?
-          </h2>
-          <p className="mt-4 max-w-xl mx-auto text-lg text-muted-foreground">
-            Become an active member of the {SITE_NAME} community today. Whether you're a student or an alumnus, share your experiences, find or offer mentorship, and stay informed.
-          </p>
-          <div className="mt-8">
-            <Button size="lg" asChild>
-              <Link href="/register">Create Your Profile</Link>
-            </Button>
+      {/* Call to Action Section - Conditionally render based on auth status */}
+      {!loading && !user && (
+        <section className="w-full py-12 md:py-24 lg:py-32 bg-muted/50">
+          <div className="container mx-auto max-w-7xl px-4 md:px-6 text-center">
+            <h2 className="text-3xl font-bold tracking-tight sm:text-4xl text-foreground">
+              Ready to Connect?
+            </h2>
+            <p className="mt-4 max-w-xl mx-auto text-lg text-muted-foreground">
+              Become an active member of the {SITE_NAME} community today. Whether you're a student or an alumnus, share your experiences, find or offer mentorship, and stay informed.
+            </p>
+            <div className="mt-8">
+              <Button size="lg" asChild>
+                <Link href="/register">Create Your Profile</Link>
+              </Button>
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
       
       {/* Placeholder for Contact Section */}
        <section id="contact" className="w-full py-12 md:py-24 lg:py-32">
