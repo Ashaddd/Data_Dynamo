@@ -7,7 +7,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
-  DialogDescription,
+  // DialogDescription, // No longer using DialogDescription directly for the problematic content
   DialogFooter,
 } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
@@ -53,7 +53,8 @@ export default function AlumniDetailModal({ alumni, isOpen, onClose }: AlumniDet
                   <Star size={14} className="mr-1" /> Notable Alumnus/Alumna
                 </Badge>
               )}
-              <DialogDescription className="text-base text-muted-foreground">
+              {/* Container for descriptive elements, styled to mimic DialogDescription */}
+              <div className="text-base text-muted-foreground">
                 <div className="flex items-center gap-2 mb-1">
                   <Briefcase size={16} className="text-primary" /> 
                   <span>{alumni.currentRole || 'Role not specified'} at {alumni.company || 'Company not specified'}</span>
@@ -68,7 +69,7 @@ export default function AlumniDetailModal({ alumni, isOpen, onClose }: AlumniDet
                         <span>Industry: {alumni.industry}</span>
                     </div>
                 )}
-              </DialogDescription>
+              </div>
             </div>
           </div>
         </DialogHeader>
