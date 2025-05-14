@@ -21,4 +21,7 @@ To build a centralized, interactive web platform that enables alumni to register
 3. Encourages event participation and collaboration
 4. Builds college reputation by showcasing success stories
 
+5. https://9000-firebase-studio-1747134016368.cluster-ys234awlzbhwoxmkkse6qo3fz6.cloudworkstations.dev/  {link
+]
+
 
