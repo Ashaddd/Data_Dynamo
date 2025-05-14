@@ -1,5 +1,5 @@
 ✅ Project Title:
-Smart Alumni Web-Based Platform
+Alumni Network Management System
 
 🧩 Problem Statement:
 After graduation, colleges often lose connection with alumni due to scattered records and poor communication channels. This results in missed mentorship opportunities and weakens the sense of community and networking.
